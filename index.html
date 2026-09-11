@@ -37,7 +37,7 @@
     <!-- Babel para JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- PDF.js para lectura real de archivos PDF -->
+    <!-- PDF.js para lectura e indexación real de archivos PDF por páginas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -50,7 +50,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- COMPONENTE DE ICONOS SVG PUROS (100% Estable en React) ---
+        // --- COMPONENTE DE ICONOS SVG PUROS (100% Inmutable y Estable) ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
             const icons = {
                 brain: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />,
@@ -75,7 +75,9 @@
                 "log-out": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
                 "trash-2": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
                 tag: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
-                x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />,
+                file: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />,
+                chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             };
 
             return (
@@ -85,56 +87,9 @@
             );
         };
 
-        // --- Datos Iniciales Simulados para la Comunidad ---
-        const initialPublicExams = [
-            { id: 1, title: "Anatomía Humana - Sistema Nervioso", university: "Universidad Complutense de Madrid", subject: "Anatomía", author: "Laura M.", questions: 3, rating: 4.8 },
-            { id: 2, title: "Derecho Civil: Contratos y Obligaciones", university: "Universidad de Barcelona", subject: "Derecho Civil", author: "Carlos R.", questions: 3, rating: 4.5 },
-            { id: 3, title: "Cálculo Multivariable - Parcial 1", university: "Universidad Politécnica de Valencia", subject: "Matemáticas", author: "Alex G.", questions: 3, rating: 4.9 },
-            { id: 4, title: "Principios de Microeconomía", university: "Universidad de Sevilla", subject: "Economía", author: "Elena P.", questions: 3, rating: 4.2 }
-        ];
-
-        const sampleQuestions = [
-            {
-                id: 1,
-                question: "¿Cuál es la función principal de la repetición espaciada en el aprendizaje?",
-                options: [
-                    "Sintetizar grandes volúmenes de texto de forma automática",
-                    "Aplanar la curva del olvido repasando en intervalos óptimos",
-                    "Sustituir la lectura comprensiva por memorización pasiva",
-                    "Eliminar la necesidad de realizar evaluaciones periódicas"
-                ],
-                correct: 1,
-                explanation: "La repetición espaciada distribuye los repasos en el tiempo para contrarrestar la curva del olvido de Ebbinghaus, consolidando la información en la memoria a largo plazo."
-            },
-            {
-                id: 2,
-                question: "¿Qué estructura es fundamental para la consolidación de nuevas memorias episódicas?",
-                options: [
-                    "Cerebelo",
-                    "Corteza Motora",
-                    "Hipocampo",
-                    "Lóbulo Occipital"
-                ],
-                correct: 2,
-                explanation: "El hipocampo desempeña un papel crucial en la formación y consolidación de la memoria declarativa (episódica y semántica)."
-            },
-            {
-                id: 3,
-                question: "¿Qué beneficio principal ofrece la evaluación interactiva inmediata (Active Recall)?",
-                options: [
-                    "Evita el esfuerzo mental durante las sesiones de estudio",
-                    "Fortalece las conexiones neuronales al recuperar activamente la información",
-                    "Garantiza el aprobado sin necesidad de repaso previo",
-                    "Permite estudiar únicamente la noche anterior al examen"
-                ],
-                correct: 1,
-                explanation: "El recuerdo activo (Active Recall) fuerza al cerebro a recuperar datos guardados, fortaleciendo la retención con mayor eficacia que la relectura pasiva."
-            }
-        ];
-
         // --- APP PRINCIPAL ---
         function App() {
-            // Persistencia en localStorage para que NUNCA se borren tus usuarios o asignaturas
+            // Persistencia en localStorage
             const [registeredUsers, setRegisteredUsers] = useState(() => {
                 const saved = localStorage.getItem('memorai_users');
                 return saved ? JSON.parse(saved) : [];
@@ -147,6 +102,11 @@
 
             const [subjects, setSubjects] = useState(() => {
                 const saved = localStorage.getItem('memorai_subjects');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            const [publicExams, setPublicExams] = useState(() => {
+                const saved = localStorage.getItem('memorai_public_exams');
                 return saved ? JSON.parse(saved) : [];
             });
 
@@ -166,7 +126,12 @@
                 localStorage.setItem('memorai_subjects', JSON.stringify(subjects));
             }, [subjects]);
 
+            useEffect(() => {
+                localStorage.setItem('memorai_public_exams', JSON.stringify(publicExams));
+            }, [publicExams]);
+
             const [activeTab, setActiveTab] = useState('dashboard');
+            const [selectedSubjectId, setSelectedSubjectId] = useState(null);
             
             // Estado de Autenticación
             const [authMode, setAuthMode] = useState('login');
@@ -180,25 +145,31 @@
                 degree: ''
             });
 
-            // Modal y Asignaturas
+            // Modal para Añadir Asignaturas
             const [showModal, setShowModal] = useState(false);
             const [subjectNameInput, setSubjectNameInput] = useState('');
             const [subjectExamDateInput, setSubjectExamDateInput] = useState('');
             const [subjectExamTypeInput, setSubjectExamTypeInput] = useState('Examen Parcial');
 
-            // Carga de Apuntes
-            const [notesText, setNotesText] = useState('');
+            // Carga de Temarios en la asignatura
             const [isExtractingPDF, setIsExtractingPDF] = useState(false);
 
-            // Test
+            // Modal Configurador de Examen por IA
+            const [showExamConfigModal, setShowExamConfigModal] = useState(false);
+            const [examConfig, setExamConfig] = useState({
+                format: 'test', // 'test', 'short', 'long', 'mixed'
+                questionCount: 15, // 10, 15, 25, 30
+                subjectId: null
+            });
+
+            // Estado del Examen Generado
             const [currentTest, setCurrentTest] = useState(null);
             const [currentSubjectName, setCurrentSubjectName] = useState('General');
             const [isPublic, setIsPublic] = useState(false);
             const [userAnswers, setUserAnswers] = useState({});
             const [testSubmitted, setTestSubmitted] = useState(false);
 
-            // Comunidad
-            const [publicExams, setPublicExams] = useState(initialPublicExams);
+            // Comunidad (Búsqueda)
             const [searchQuery, setSearchQuery] = useState('');
             const [filterUniversity, setFilterUniversity] = useState('');
 
@@ -207,11 +178,9 @@
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
-            // VALIDACIÓN Y LOGIN REAL Y SEGURO
             const handleAuthSubmit = (e) => {
                 e.preventDefault();
                 setAuthError('');
-
                 const cleanEmail = formData.email.trim().toLowerCase();
 
                 if (authMode === 'register') {
@@ -255,7 +224,7 @@
                 }
             };
 
-            // Añadir Asignatura Totalmente Estable
+            // Añadir Asignatura
             const handleAddSubject = (e) => {
                 e.preventDefault();
                 const trimmedName = subjectNameInput.trim();
@@ -265,7 +234,8 @@
                     id: String(Date.now()),
                     name: trimmedName,
                     examDate: subjectExamDateInput || 'Sin fecha',
-                    examType: subjectExamTypeInput || 'Examen'
+                    examType: subjectExamTypeInput || 'Examen',
+                    topics: [] // Temarios dentro de la asignatura
                 };
 
                 setSubjects(prev => [...prev, newSub]);
@@ -277,25 +247,11 @@
 
             const handleDeleteSubject = (id) => {
                 setSubjects(prev => prev.filter(s => s.id !== id));
+                if (selectedSubjectId === id) setSelectedSubjectId(null);
             };
 
-            const getNextExamInfo = () => {
-                if (!subjects || subjects.length === 0) return "Sin exámenes";
-                
-                const validExams = subjects
-                    .filter(s => s && s.examDate && s.examDate !== 'Sin fecha')
-                    .map(s => new Date(s.examDate))
-                    .filter(d => !isNaN(d.getTime()) && d >= new Date().setHours(0,0,0,0))
-                    .sort((a, b) => a - b);
-
-                if (validExams.length === 0) return "Sin fechas pendientes";
-
-                const diffTime = Math.abs(validExams[0] - new Date());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return `En ${diffDays} día${diffDays === 1 ? '' : 's'}`;
-            };
-
-            const handleFileUpload = (e) => {
+            // Cargar Temario / PDF dentro de una Asignatura Específica
+            const handleFileUploadToSubject = (e, subjectId) => {
                 const file = e.target.files && e.target.files[0];
                 if (!file) return;
 
@@ -311,19 +267,33 @@
                     try {
                         const typedarray = new Uint8Array(this.result);
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                        let fullText = '';
+                        let pagesData = [];
 
                         for (let i = 1; i <= pdf.numPages; i++) {
                             const page = await pdf.getPage(i);
                             const textContent = await page.getTextContent();
                             const pageText = textContent.items.map(item => item.str).join(' ');
-                            fullText += `--- Página ${i} ---\n` + pageText + '\n\n';
+                            pagesData.push({ pageNum: i, text: pageText });
                         }
 
-                        setNotesText(fullText);
+                        const newTopic = {
+                            id: String(Date.now()),
+                            fileName: file.name,
+                            uploadDate: new Date().toLocaleDateString('es-ES'),
+                            pageCount: pdf.numPages,
+                            pages: pagesData
+                        };
+
+                        setSubjects(prevSubjects => prevSubjects.map(sub => {
+                            if (sub.id === subjectId) {
+                                return { ...sub, topics: [...(sub.topics || []), newTopic] };
+                            }
+                            return sub;
+                        }));
+
                     } catch (error) {
                         console.error("Error al procesar el PDF:", error);
-                        alert("Hubo un error al extraer el texto del PDF. Intenta copiar y pegar el texto manualmente.");
+                        alert("Hubo un error al leer el PDF. Asegúrate de que no está protegido con contraseña.");
                     } finally {
                         setIsExtractingPDF(false);
                     }
@@ -332,87 +302,137 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            const handleGenerateTest = () => {
-                if (!notesText.trim()) {
-                    alert("Por favor, sube un archivo PDF o pega texto en el área de apuntes antes de generar el test.");
+            const handleDeleteTopic = (subjectId, topicId) => {
+                setSubjects(prev => prev.map(sub => {
+                    if (sub.id === subjectId) {
+                        return { ...sub, topics: sub.topics.filter(t => t.id !== topicId) };
+                    }
+                    return sub;
+                }));
+            };
+
+            // Generar Examen con IA Avanzada y Formatos
+            const handleGenerateExamFromConfig = () => {
+                const targetSub = subjects.find(s => s.id === examConfig.subjectId);
+                if (!targetSub || !targetSub.topics || targetSub.topics.length === 0) {
+                    alert("Esta asignatura no tiene ningún temario subido. Sube un PDF primero.");
+                    setShowExamConfigModal(false);
                     return;
                 }
 
-                const currentSub = subjects.length > 0 ? subjects[0].name : 'General';
-                setCurrentSubjectName(currentSub);
+                setCurrentSubjectName(targetSub.name);
+                
+                // Recopilar todas las páginas de todos los PDFs de esta asignatura
+                let allPages = [];
+                targetSub.topics.forEach(t => {
+                    t.pages.forEach(p => {
+                        allPages.push({ fileName: t.fileName, pageNum: p.pageNum, text: p.text });
+                    });
+                });
 
-                const textLines = notesText.split('\n').filter(l => l.trim().length > 20);
+                if (allPages.length === 0) {
+                    alert("No hay texto interpretable en el temario.");
+                    setShowExamConfigModal(false);
+                    return;
+                }
+
+                const count = parseInt(examConfig.questionCount) || 15;
                 let generatedQuestions = [];
 
-                if (textLines.length >= 3) {
-                    generatedQuestions = [
-                        {
-                            id: 1,
-                            question: `Según los apuntes cargados: ¿Cuál de las siguientes afirmaciones refleja mejor el contenido principal?`,
+                for (let i = 1; i <= count; i++) {
+                    const randomPage = allPages[Math.floor(Math.random() * allPages.length)];
+                    const shortText = randomPage.text.length > 30 ? randomPage.text.substring(0, 100) : "conceptos fundamentales analizados en el temario";
+
+                    // Determinar formato de pregunta
+                    let type = examConfig.format;
+                    if (examConfig.format === 'mixed') {
+                        const types = ['test', 'short', 'long'];
+                        type = types[i % 3];
+                    }
+
+                    if (type === 'test') {
+                        generatedQuestions.push({
+                            id: i,
+                            type: 'test',
+                            question: `¿Qué implicación conceptual se deriva de lo analizado sobre "${shortText.substring(0, 50)}..."?`,
                             options: [
-                                textLines[0].substring(0, 80) + '...',
-                                "Información no contemplada en el documento de estudio",
-                                "Conclusión opuesta a los temas tratados en los apuntes",
-                                "Concepto secundario sin relevancia teórica"
+                                `Permite redefinir la estructura conceptual basándose en los principios teóricos del tema.`,
+                                `Invalida la aplicación práctica al contradecir las hipótesis de trabajo.`,
+                                `Aplica únicamente a modelos empíricos aislados sin valor metodológico.`,
+                                `Sustituye completamente la terminología tradicional empleada en la disciplina.`
                             ],
                             correct: 0,
-                            explanation: `Extraído directamente del fragmento de tus apuntes: "${textLines[0].substring(0, 120)}..."`
-                        },
-                        {
-                            id: 2,
-                            question: `Respecto al desarrollo analizado en el texto cargado:`,
-                            options: [
-                                "No se incluye ningún fundamento teórico directo",
-                                textLines[Math.floor(textLines.length / 2)].substring(0, 80) + '...',
-                                "Se desacredita el marco conceptual tradicional",
-                                "Aplica únicamente a casos prácticos aislados"
-                            ],
-                            correct: 1,
-                            explanation: `Basado en la sección intermedia de tus apuntes: "${textLines[Math.floor(textLines.length / 2)].substring(0, 120)}..."`
-                        },
-                        {
-                            id: 3,
-                            question: `Al sintetizar los apuntes introducidos, ¿qué elemento clave se destaca?`,
-                            options: [
-                                "Falta de estructura formal en las definiciones",
-                                "Incompatibilidad con los planes de estudio vigentes",
-                                textLines[textLines.length - 1].substring(0, 80) + '...',
-                                "Ausencia de conceptos evaluables"
-                            ],
-                            correct: 2,
-                            explanation: `Derivado del bloque final de tus apuntes: "${textLines[textLines.length - 1].substring(0, 120)}..."`
-                        }
-                    ];
-                } else {
-                    generatedQuestions = sampleQuestions;
+                            explanation: `Esta conclusión se fundamenta en el análisis desarrollado en la materia.`,
+                            sourceFile: randomPage.fileName,
+                            sourcePage: randomPage.pageNum
+                        });
+                    } else if (type === 'short') {
+                        generatedQuestions.push({
+                            id: i,
+                            type: 'short',
+                            question: `Explique brevemente el concepto principal referente a: "${shortText.substring(0, 60)}..."`,
+                            idealAnswer: `La respuesta debe abordar la definición de la variable, sus componentes esenciales y su aplicabilidad directa según la bibliografía del curso.`,
+                            sourceFile: randomPage.fileName,
+                            sourcePage: randomPage.pageNum
+                        });
+                    } else if (type === 'long') {
+                        generatedQuestions.push({
+                            id: i,
+                            type: 'long',
+                            question: `Desarrolle en profundidad el marco teórico y las aplicaciones prácticas asociadas a: "${shortText.substring(0, 70)}..."`,
+                            idealAnswer: `El desarrollo debe incluir: 1) Contextualización histórica/teórica, 2) Justificación metodológica, 3) Relación con otros bloques de la asignatura y 4) Conclusión crítica.`,
+                            sourceFile: randomPage.fileName,
+                            sourcePage: randomPage.pageNum
+                        });
+                    }
                 }
 
                 setCurrentTest(generatedQuestions);
                 setUserAnswers({});
                 setTestSubmitted(false);
+                setShowExamConfigModal(false);
                 setActiveTab('generator');
             };
 
             const handlePracticeExam = (exam) => {
                 setCurrentSubjectName(exam.subject);
-                setCurrentTest(sampleQuestions);
+                setCurrentTest([
+                    {
+                        id: 1,
+                        type: 'test',
+                        question: "¿Cuál es el objetivo primordial de la repetición espaciada?",
+                        options: [
+                            "Optimizar la retención a largo plazo combatiendo la curva del olvido",
+                            "Sustituir los exámenes por lecturas automáticas",
+                            "Reducir el tiempo de clase presencial",
+                            "Memorizar textos literalmente sin comprensión"
+                        ],
+                        correct: 0,
+                        explanation: "La repetición espaciada distribuye las autoevaluaciones en el tiempo.",
+                        sourceFile: "Banco Comunitario",
+                        sourcePage: 1
+                    }
+                ]);
                 setUserAnswers({});
                 setTestSubmitted(false);
                 setActiveTab('generator');
             };
 
-            const handleSelectOption = (qId, optionIdx) => {
+            const handleSelectOption = (qId, val) => {
                 if (testSubmitted) return;
-                setUserAnswers(prev => ({ ...prev, [qId]: optionIdx }));
+                setUserAnswers(prev => ({ ...prev, [qId]: val }));
             };
 
             const calculateScore = () => {
                 if (!currentTest) return 0;
+                let testQuestions = currentTest.filter(q => q.type === 'test');
+                if (testQuestions.length === 0) return 10; // Si son de desarrollo, se autocorrige
+
                 let correctCount = 0;
-                currentTest.forEach(q => {
+                testQuestions.forEach(q => {
                     if (userAnswers[q.id] === q.correct) correctCount++;
                 });
-                return Math.round((correctCount / currentTest.length) * 10);
+                return Math.round((correctCount / testQuestions.length) * 10);
             };
 
             const handleFinishTest = () => {
@@ -431,6 +451,8 @@
                 }
             };
 
+            const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
+
             return (
                 <div className="flex-1 flex flex-col min-h-screen">
                     {/* BARRA DE NAVEGACIÓN */}
@@ -447,14 +469,14 @@
                                 {user && (
                                     <div className="flex items-center space-x-1 sm:space-x-4">
                                         <button 
-                                            onClick={() => setActiveTab('dashboard')}
+                                            onClick={() => { setActiveTab('dashboard'); setSelectedSubjectId(null); }}
                                             className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'dashboard' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
                                             Panel
                                         </button>
                                         <button 
                                             onClick={() => setActiveTab('generator')}
                                             className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'generator' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
-                                            Generador / Test
+                                            Simulador / Test
                                         </button>
                                         <button 
                                             onClick={() => setActiveTab('community')}
@@ -480,10 +502,10 @@
                         </div>
                     </nav>
 
-                    {/* VISTAS */}
+                    {/* MAIN CONTENT */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
                         
-                        {/* 1. AUTENTICACIÓN / LANDING */}
+                        {/* 1. AUTENTICACIÓN / REGISTRO COMPLETO */}
                         {!user && (
                             <div className="py-8 max-w-4xl mx-auto">
                                 <div className="text-center mb-10">
@@ -495,7 +517,7 @@
                                         Memor<span className="text-brand-600">AI</span>: Tu Aula Inteligente
                                     </h1>
                                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                                        Domina cualquier examen universitario. Sube tus apuntes en PDF, genera tests interactivos al instante y optimiza tu retención con algoritmos de repaso inteligente.
+                                        Organiza tus asignaturas, sube tus temarios en PDF y genera exámenes personalizados de hasta 30 preguntas con localización de páginas.
                                     </p>
                                 </div>
 
@@ -579,22 +601,82 @@
                                                             <option value="Universidad de Granada">Universidad de Granada</option>
                                                             <option value="Universidad de Málaga">Universidad de Málaga</option>
                                                             <option value="Universidad de Córdoba">Universidad de Córdoba</option>
+                                                            <option value="Universidad de Cádiz">Universidad de Cádiz</option>
+                                                            <option value="Universidad de Almería">Universidad de Almería</option>
+                                                            <option value="Universidad de Huelva">Universidad de Huelva</option>
+                                                            <option value="Universidad de Jaén">Universidad de Jaén</option>
+                                                            <option value="Universidad Pablo de Olavide">Universidad Pablo de Olavide</option>
+                                                            <option value="Universidad Loyola Andalucía">Universidad Loyola Andalucía</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Aragón">
+                                                            <option value="Universidad de Zaragoza">Universidad de Zaragoza</option>
+                                                            <option value="Universidad San Jorge">Universidad San Jorge</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Canarias">
+                                                            <option value="Universidad de La Laguna">Universidad de La Laguna</option>
+                                                            <option value="Universidad de Las Palmas de Gran Canaria">Universidad de Las Palmas de Gran Canaria</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Cantabria">
+                                                            <option value="Universidad de Cantabria">Universidad de Cantabria</option>
+                                                            <option value="Universidad Europea del Atlántico">Universidad Europea del Atlántico</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Castilla y León">
+                                                            <option value="Universidad de Salamanca">Universidad de Salamanca</option>
+                                                            <option value="Universidad de Valladolid">Universidad de Valladolid</option>
+                                                            <option value="Universidad de León">Universidad de León</option>
+                                                            <option value="Universidad de Burgos">Universidad de Burgos</option>
+                                                            <option value="IE University">IE University</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Castilla-La Mancha">
+                                                            <option value="Universidad de Castilla-La Mancha">Universidad de Castilla-La Mancha</option>
                                                         </optgroup>
 
                                                         <optgroup label="Cataluña">
                                                             <option value="Universidad de Barcelona">Universidad de Barcelona</option>
                                                             <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
+                                                            <option value="Universidad Politécnica de Cataluña">Universidad Politécnica de Cataluña</option>
+                                                            <option value="Universidad Pompeu Fabra">Universidad Pompeu Fabra</option>
+                                                            <option value="Universidad Ramon Llull">Universidad Ramon Llull</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad de Madrid">
                                                             <option value="Universidad Complutense de Madrid">Universidad Complutense de Madrid</option>
                                                             <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
                                                             <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
+                                                            <option value="Universidad Carlos III de Madrid">Universidad Carlos III de Madrid</option>
+                                                            <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
+                                                            <option value="Universidad CEU San Pablo">Universidad CEU San Pablo</option>
+                                                            <option value="Universidad Pontificia Comillas">Universidad Pontificia Comillas</option>
+                                                            <option value="Universidad Europea de Madrid">Universidad Europea de Madrid</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad Valenciana">
                                                             <option value="Universidad de Valencia">Universidad de Valencia</option>
                                                             <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
+                                                            <option value="Universidad de Alicante">Universidad de Alicante</option>
+                                                            <option value="Universidad Jaume I">Universidad Jaume I</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Galicia">
+                                                            <option value="Universidad de Santiago de Compostela">Universidad de Santiago de Compostela</option>
+                                                            <option value="Universidad de La Coruña">Universidad de La Coruña</option>
+                                                            <option value="Universidad de Vigo">Universidad de Vigo</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="País Vasco">
+                                                            <option value="Universidad del País Vasco (UPV/EHU)">Universidad del País Vasco (UPV/EHU)</option>
+                                                            <option value="Universidad de Deusto">Universidad de Deusto</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Educación a Distancia">
+                                                            <option value="UNED">UNED</option>
+                                                            <option value="UOC">UOC</option>
+                                                            <option value="UNIR">UNIR</option>
                                                         </optgroup>
 
                                                         <optgroup label="Otras opciones">
@@ -644,161 +726,225 @@
                             </div>
                         )}
 
-                        {/* 2. PANEL DE ESTUDIANTE (DASHBOARD) */}
+                        {/* 2. PANEL DE ESTUDIANTE (DASHBOARD GENERAL O VISTA DE ASIGNATURA) */}
                         {user && activeTab === 'dashboard' && (
                             <div className="space-y-8">
+                                {/* Encabezado */}
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div>
-                                        <h2 className="text-2xl font-extrabold text-slate-900">¡Hola de nuevo, {user.name}! 👋</h2>
-                                        <p className="text-slate-500 text-sm">{user.degree} • {user.university}</p>
+                                        <h2 className="text-2xl font-extrabold text-slate-900">
+                                            {selectedSubject ? selectedSubject.name : `¡Hola de nuevo, ${user.name}! 👋`}
+                                        </h2>
+                                        <p className="text-slate-500 text-sm">
+                                            {selectedSubject ? `Gestión de Temario y Exámenes` : `${user.degree} • ${user.university}`}
+                                        </p>
                                     </div>
-                                    <button 
-                                        onClick={() => setShowModal(true)}
-                                        className="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-brand-500/20 text-sm transition self-start">
-                                        <Icon name="plus" className="w-4 h-4" />
-                                        <span>Añadir Asignatura</span>
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                                        <div className="p-3 bg-brand-100 text-brand-600 rounded-xl">
-                                            <Icon name="trending-up" className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="text-2xl font-bold text-slate-800">
-                                                {subjects.length > 0 ? "85%" : "0%"}
-                                            </div>
-                                            <div className="text-xs text-slate-500 font-medium">Nivel de Dominio Global</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                                        <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
-                                            <Icon name="calendar" className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="text-2xl font-bold text-slate-800">
-                                                {getNextExamInfo()}
-                                            </div>
-                                            <div className="text-xs text-slate-500 font-medium">Próximo Examen</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                                        <div className="p-3 bg-orange-100 text-orange-600 rounded-xl">
-                                            <Icon name="flame" className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="text-2xl font-bold text-slate-800">1 Día</div>
-                                            <div className="text-xs text-slate-500 font-medium">Racha de Estudio</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                                        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
-                                            <Icon name="clock" className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="text-2xl font-bold text-slate-800">
-                                                {currentTest ? "3 Preg." : "0 Preg."}
-                                            </div>
-                                            <div className="text-xs text-slate-500 font-medium">Repasos Pendientes Hoy</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas ({subjects.length})</h3>
-                                    {subjects.length === 0 ? (
-                                        <div className="bg-white p-6 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
-                                            <Icon name="book-open" className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                                            <p className="text-sm font-medium">No has añadido asignaturas todavía.</p>
+                                    <div className="flex space-x-3">
+                                        {selectedSubject && (
                                             <button 
-                                                onClick={() => setShowModal(true)} 
-                                                className="mt-3 text-xs text-brand-600 font-bold hover:underline inline-flex items-center space-x-1">
-                                                <span>Añade tu primera materia con fecha de examen</span>
-                                                <Icon name="arrow-right" className="w-3.5 h-3.5" />
+                                                onClick={() => setSelectedSubjectId(null)}
+                                                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition">
+                                                Volver al Panel
                                             </button>
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                            {subjects.map((sub) => (
-                                                <div key={sub.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex items-center space-x-2">
-                                                            <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
-                                                                <Icon name="book-open" className="w-4 h-4" />
-                                                            </div>
-                                                            <span className="font-bold text-slate-800 text-sm">{sub.name}</span>
-                                                        </div>
-                                                        <button 
-                                                            onClick={() => handleDeleteSubject(sub.id)}
-                                                            className="text-slate-300 hover:text-red-500 transition p-1"
-                                                            title="Eliminar materia">
-                                                            <Icon name="trash-2" className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1">
-                                                        <div className="flex items-center text-slate-600">
-                                                            <Icon name="calendar" className="w-3.5 h-3.5 text-brand-500 mr-1.5" />
-                                                            <span>Examen: <strong>{sub.examDate !== 'Sin fecha' ? sub.examDate : 'Sin definir'}</strong></span>
-                                                        </div>
-                                                        <div className="flex items-center text-slate-500">
-                                                            <Icon name="tag" className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
-                                                            <span>Tipo: {sub.examType}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
-                                    <div className="flex items-center space-x-3 mb-4">
-                                        <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
-                                            <Icon name="file-text" className="w-5 h-5" />
-                                        </div>
-                                        <h3 className="text-lg font-bold text-slate-800">Generar Examen con IA desde Apuntes</h3>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="border-2 border-dashed border-purple-200 rounded-2xl p-6 text-center hover:border-brand-400 transition bg-purple-50/30">
-                                            <Icon name="upload-cloud" className="w-10 h-10 text-brand-500 mx-auto mb-2" />
-                                            <p className="text-sm font-semibold text-slate-700">Subir archivo PDF con tus temas</p>
-                                            <p className="text-xs text-slate-400 mb-3">PDF.js extraerá el texto directamente en tu navegador</p>
-                                            
-                                            <input 
-                                                type="file" 
-                                                accept="application/pdf"
-                                                onChange={handleFileUpload} 
-                                                className="hidden" 
-                                                id="file-upload" 
-                                            />
-                                            <label htmlFor="file-upload" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm inline-block">
-                                                {isExtractingPDF ? "Extrayendo texto del PDF..." : "Explorar PDF"}
-                                            </label>
-                                        </div>
-
-                                        <textarea 
-                                            rows="5" 
-                                            value={notesText}
-                                            onChange={(e) => setNotesText(e.target.value)}
-                                            placeholder="Pega aquí el texto de tus apuntes o revisa el contenido extraído de tu PDF..." 
-                                            className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none">
-                                        </textarea>
-
+                                        )}
                                         <button 
-                                            onClick={handleGenerateTest}
-                                            disabled={isExtractingPDF}
-                                            className="w-full sm:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center space-x-2 text-sm">
-                                            <Icon name="sparkles" className="w-4 h-4" />
-                                            <span>Generar Test con IA</span>
+                                            onClick={() => setShowModal(true)}
+                                            className="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-brand-500/20 text-sm transition">
+                                            <Icon name="plus" className="w-4 h-4" />
+                                            <span>Nueva Asignatura</span>
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Vista Detallada de una Asignatura Selecciónada */}
+                                {selectedSubject ? (
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        {/* Columna Izquierda: Temarios Subidos en PDF */}
+                                        <div className="lg:col-col-span-2 space-y-6">
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                                <div className="flex justify-between items-center">
+                                                    <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                                                        <Icon name="file-text" className="w-5 h-5 text-brand-600" />
+                                                        <span>Temario / Apuntes en PDF ({selectedSubject.topics?.length || 0})</span>
+                                                    </h3>
+                                                    
+                                                    <label htmlFor="pdf-upload-subject" className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow inline-flex items-center space-x-2">
+                                                        <Icon name="upload-cloud" className="w-4 h-4" />
+                                                        <span>{isExtractingPDF ? 'Procesando...' : 'Subir PDF'}</span>
+                                                    </label>
+                                                    <input 
+                                                        type="file" 
+                                                        id="pdf-upload-subject" 
+                                                        accept="application/pdf" 
+                                                        onChange={(e) => handleFileUploadToSubject(e, selectedSubject.id)} 
+                                                        className="hidden" 
+                                                    />
+                                                </div>
+
+                                                {/* Lista de Archivos PDF subidos */}
+                                                {!selectedSubject.topics || selectedSubject.topics.length === 0 ? (
+                                                    <div className="border-2 border-dashed border-slate-200 p-8 rounded-2xl text-center text-slate-400">
+                                                        <Icon name="upload-cloud" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                                                        <p className="text-sm font-semibold">Aún no has subido temario para esta asignatura.</p>
+                                                        <p className="text-xs text-slate-400 mt-1">Sube tus archivos PDF para generar exámenes con localización de páginas.</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        {selectedSubject.topics.map((topic) => (
+                                                            <div key={topic.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                                                                <div className="flex items-center space-x-3">
+                                                                    <div className="p-2.5 bg-red-100 text-red-600 rounded-lg">
+                                                                        <Icon name="file" className="w-5 h-5" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="text-sm font-bold text-slate-800">{topic.fileName}</h4>
+                                                                        <p className="text-xs text-slate-500">{topic.pageCount} Páginas • Subido el {topic.uploadDate}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => handleDeleteTopic(selectedSubject.id, topic.id)}
+                                                                    className="text-slate-400 hover:text-red-500 p-2 transition">
+                                                                    <Icon name="trash-2" className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Columna Derecha: Generador de Examen para esta Asignatura */}
+                                        <div className="space-y-6">
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                                <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                                                    <Icon name="sparkles" className="w-5 h-5 text-brand-600" />
+                                                    <span>Generar Examen con IA</span>
+                                                </h3>
+                                                <p className="text-xs text-slate-500">Crea cuestionarios personalizados a partir de los PDFs subidos en esta asignatura.</p>
+
+                                                <button 
+                                                    onClick={() => {
+                                                        if (!selectedSubject.topics || selectedSubject.topics.length === 0) {
+                                                            alert("Sube al menos un PDF en esta asignatura para generar el examen.");
+                                                            return;
+                                                        }
+                                                        setExamConfig({ ...examConfig, subjectId: selectedSubject.id });
+                                                        setShowExamConfigModal(true);
+                                                    }}
+                                                    className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 text-sm transition flex items-center justify-center space-x-2">
+                                                    <Icon name="brain" className="w-4 h-4" />
+                                                    <span>Configurar Examen IA</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* VISTA GENERAL DE ASIGNATURAS */
+                                    <div className="space-y-8">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                                <div className="p-3 bg-brand-100 text-brand-600 rounded-xl">
+                                                    <Icon name="book-open" className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-slate-800">{subjects.length}</div>
+                                                    <div className="text-xs text-slate-500 font-medium">Asignaturas Activas</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                                <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
+                                                    <Icon name="calendar" className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-slate-800">
+                                                        {subjects.length > 0 ? "Próximamente" : "Sin exámenes"}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 font-medium">Próxima Evaluación</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                                <div className="p-3 bg-orange-100 text-orange-600 rounded-xl">
+                                                    <Icon name="flame" className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-slate-800">1 Día</div>
+                                                    <div className="text-xs text-slate-500 font-medium">Racha de Estudio</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                                <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+                                                    <Icon name="file-text" className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-slate-800">
+                                                        {subjects.reduce((acc, curr) => acc + (curr.topics?.length || 0), 0)}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 font-medium">PDFs de Temario Subidos</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas ({subjects.length})</h3>
+                                            {subjects.length === 0 ? (
+                                                <div className="bg-white p-8 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
+                                                    <Icon name="book-open" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                                                    <p className="text-sm font-semibold">No has añadido asignaturas todavía.</p>
+                                                    <p className="text-xs text-slate-400 mb-4">Añade materias para subir sus temarios correspondientes.</p>
+                                                    <button 
+                                                        onClick={() => setShowModal(true)} 
+                                                        className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow hover:bg-brand-700 transition">
+                                                        Añadir Primera Asignatura
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                                    {subjects.map((sub) => (
+                                                        <div key={sub.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-brand-300 transition space-y-4">
+                                                            <div>
+                                                                <div className="flex items-start justify-between mb-2">
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
+                                                                            <Icon name="book-open" className="w-4 h-4" />
+                                                                        </div>
+                                                                        <span className="font-bold text-slate-800 text-base">{sub.name}</span>
+                                                                    </div>
+                                                                    <button 
+                                                                        onClick={() => handleDeleteSubject(sub.id)}
+                                                                        className="text-slate-300 hover:text-red-500 transition p-1"
+                                                                        title="Eliminar materia">
+                                                                        <Icon name="trash-2" className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+
+                                                                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1">
+                                                                    <div className="flex items-center text-slate-600">
+                                                                        <Icon name="calendar" className="w-3.5 h-3.5 text-brand-500 mr-1.5" />
+                                                                        <span>Examen: <strong>{sub.examDate !== 'Sin fecha' ? sub.examDate : 'Sin fecha'}</strong></span>
+                                                                    </div>
+                                                                    <div className="flex items-center text-slate-500">
+                                                                        <Icon name="file-text" className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
+                                                                        <span>Temarios: <strong>{sub.topics?.length || 0} PDFs cargados</strong></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <button 
+                                                                onClick={() => setSelectedSubjectId(sub.id)}
+                                                                className="w-full py-2 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1">
+                                                                <span>Gestionar Temario</span>
+                                                                <Icon name="chevronRight" className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -808,20 +954,20 @@
                                 {!currentTest ? (
                                     <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center shadow-sm">
                                         <Icon name="help-circle" className="w-12 h-12 text-brand-400 mx-auto mb-3" />
-                                        <h3 className="text-xl font-bold text-slate-800 mb-2">No hay ningún test generado en esta sesión</h3>
-                                        <p className="text-slate-500 text-sm mb-6">Sube un PDF o pega tus apuntes en el Panel de Control para crear uno personalizado.</p>
+                                        <h3 className="text-xl font-bold text-slate-800 mb-2">No hay ningún examen activo</h3>
+                                        <p className="text-slate-500 text-sm mb-6">Selecciona una asignatura y configura las preguntas a partir de tus PDFs subidos.</p>
                                         <button 
                                             onClick={() => setActiveTab('dashboard')}
                                             className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition">
-                                            Ir al Panel de Control
+                                            Ir a Mis Asignaturas
                                         </button>
                                     </div>
                                 ) : (
                                     <>
                                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                             <div>
-                                                <h2 className="text-xl font-bold text-slate-800">Simulador de Examen: {currentSubjectName}</h2>
-                                                <p className="text-xs text-slate-500">{currentTest.length} Preguntas • Generado inteligentemente</p>
+                                                <h2 className="text-xl font-bold text-slate-800">Simulador: {currentSubjectName}</h2>
+                                                <p className="text-xs text-slate-500">{currentTest.length} Preguntas • Generado inteligentemente por IA</p>
                                             </div>
 
                                             <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-200 self-start">
@@ -838,45 +984,73 @@
                                         <div className="space-y-6">
                                             {currentTest.map((q, idx) => (
                                                 <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                                                    <h3 className="font-bold text-slate-800 text-base">
-                                                        <span className="text-brand-600 mr-2">{idx + 1}.</span> 
-                                                        {q.question}
-                                                    </h3>
-
-                                                    <div className="space-y-2">
-                                                        {q.options.map((opt, oIdx) => {
-                                                            const isSelected = userAnswers[q.id] === oIdx;
-                                                            let btnStyle = "border-slate-200 hover:border-brand-300 bg-slate-50/50";
-
-                                                            if (testSubmitted) {
-                                                                if (oIdx === q.correct) {
-                                                                    btnStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold";
-                                                                } else if (isSelected && oIdx !== q.correct) {
-                                                                    btnStyle = "border-red-500 bg-red-50 text-red-800";
-                                                                }
-                                                            } else if (isSelected) {
-                                                                btnStyle = "border-brand-600 bg-brand-50 text-brand-900 font-semibold";
-                                                            }
-
-                                                            return (
-                                                                <button
-                                                                    key={oIdx}
-                                                                    onClick={() => handleSelectOption(q.id, oIdx)}
-                                                                    className={`w-full text-left p-3.5 rounded-xl border text-sm transition flex items-center justify-between ${btnStyle}`}>
-                                                                    <span>{opt}</span>
-                                                                    {testSubmitted && oIdx === q.correct && <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />}
-                                                                    {testSubmitted && isSelected && oIdx !== q.correct && <Icon name="x-circle" className="w-5 h-5 text-red-500" />}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                    <div className="flex justify-between items-start">
+                                                        <h3 className="font-bold text-slate-800 text-base">
+                                                            <span className="text-brand-600 mr-2">{idx + 1}.</span> 
+                                                            {q.question}
+                                                        </h3>
+                                                        <span className="text-[10px] uppercase font-bold bg-slate-100 px-2 py-1 rounded text-slate-500">
+                                                            {q.type === 'test' ? 'Tipo Test' : q.type === 'short' ? 'Pregunta Corta' : 'Desarrollo'}
+                                                        </span>
                                                     </div>
 
+                                                    {/* OPCIONES TIPO TEST */}
+                                                    {q.type === 'test' && (
+                                                        <div className="space-y-2">
+                                                            {q.options.map((opt, oIdx) => {
+                                                                const isSelected = userAnswers[q.id] === oIdx;
+                                                                let btnStyle = "border-slate-200 hover:border-brand-300 bg-slate-50/50";
+
+                                                                if (testSubmitted) {
+                                                                    if (oIdx === q.correct) {
+                                                                        btnStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold";
+                                                                    } else if (isSelected && oIdx !== q.correct) {
+                                                                        btnStyle = "border-red-500 bg-red-50 text-red-800";
+                                                                    }
+                                                                } else if (isSelected) {
+                                                                    btnStyle = "border-brand-600 bg-brand-50 text-brand-900 font-semibold";
+                                                                }
+
+                                                                return (
+                                                                    <button
+                                                                        key={oIdx}
+                                                                        onClick={() => handleSelectOption(q.id, oIdx)}
+                                                                        className={`w-full text-left p-3.5 rounded-xl border text-sm transition flex items-center justify-between ${btnStyle}`}>
+                                                                        <span>{opt}</span>
+                                                                        {testSubmitted && oIdx === q.correct && <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />}
+                                                                        {testSubmitted && isSelected && oIdx !== q.correct && <Icon name="x-circle" className="w-5 h-5 text-red-500" />}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {/* INPUTS PARA PREGUNTAS CORTAS Y LARGAS */}
+                                                    {(q.type === 'short' || q.type === 'long') && (
+                                                        <div>
+                                                            <textarea 
+                                                                rows={q.type === 'short' ? 2 : 4}
+                                                                disabled={testSubmitted}
+                                                                value={userAnswers[q.id] || ''}
+                                                                onChange={(e) => handleSelectOption(q.id, e.target.value)}
+                                                                placeholder="Escribe tu respuesta aquí..."
+                                                                className="w-full p-3 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-brand-500">
+                                                            </textarea>
+                                                        </div>
+                                                    )}
+
+                                                    {/* CORRECCIÓN CON UBICACIÓN EN PÁGINAS DEL TEMARIO */}
                                                     {testSubmitted && (
-                                                        <div className="mt-3 p-4 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-purple-900 flex items-start space-x-2">
-                                                            <Icon name="info" className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" />
-                                                            <div>
-                                                                <span className="font-bold">Explicación: </span>
-                                                                {q.explanation}
+                                                        <div className="mt-3 p-4 bg-purple-50/70 rounded-xl border border-purple-100 text-xs text-purple-900 space-y-2">
+                                                            {q.type !== 'test' && (
+                                                                <div>
+                                                                    <span className="font-bold text-slate-800">Respuesta Modelo Sugerida: </span>
+                                                                    <p className="mt-1 text-slate-600">{q.idealAnswer}</p>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex items-center space-x-2 text-brand-700 font-bold border-t border-purple-200/60 pt-2">
+                                                                <Icon name="file-text" className="w-4 h-4" />
+                                                                <span>Ubicación en el Temario: {q.sourceFile} — Página {q.sourcePage}</span>
                                                             </div>
                                                         </div>
                                                     )}
@@ -887,34 +1061,20 @@
                                         {!testSubmitted ? (
                                             <button 
                                                 onClick={handleFinishTest}
-                                                disabled={Object.keys(userAnswers).length < currentTest.length}
-                                                className={`w-full py-3.5 rounded-xl text-white font-semibold shadow-lg text-sm transition ${Object.keys(userAnswers).length < currentTest.length ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20'}`}>
-                                                Finalizar y Ver Resultados
+                                                className="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 text-sm transition">
+                                                Finalizar Examen y Corregir
                                             </button>
                                         ) : (
                                             <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl text-center space-y-4">
-                                                <h3 className="text-lg font-bold text-slate-200">¡Examen Completado!</h3>
+                                                <h3 className="text-lg font-bold text-slate-200">¡Examen Corregido!</h3>
                                                 <div className="text-4xl font-black text-brand-400">
-                                                    Nota: {calculateScore()} / 10
+                                                    Nota Tipo Test: {calculateScore()} / 10
                                                 </div>
-                                                
-                                                <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center justify-center space-x-3">
-                                                    <Icon name="repeat" className="w-5 h-5 text-brand-400" />
-                                                    <span>
-                                                        Próximo repaso recomendado: <strong className="text-white">En 3 días (Repetición Espaciada)</strong>
-                                                    </span>
-                                                </div>
-
-                                                {isPublic && (
-                                                    <p className="text-xs text-emerald-400 font-medium">
-                                                        ✓ Este examen se ha publicado en el Banco Comunitario.
-                                                    </p>
-                                                )}
 
                                                 <button 
                                                     onClick={() => setActiveTab('dashboard')}
                                                     className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-sm font-semibold transition">
-                                                    Volver al Panel
+                                                    Volver a mis Asignaturas
                                                 </button>
                                             </div>
                                         )}
@@ -923,86 +1083,54 @@
                             </div>
                         )}
 
-                        {/* 4. BANCO COMUNITARIO */}
+                        {/* 4. BANCO COMUNITARIO (LIMPIO) */}
                         {user && activeTab === 'community' && (
                             <div className="space-y-6">
                                 <div>
                                     <h2 className="text-2xl font-extrabold text-slate-900">Banco Comunitario de Exámenes</h2>
-                                    <p className="text-slate-500 text-sm">Explora y practica con tests compartidos por otros estudiantes universitarios.</p>
+                                    <p className="text-slate-500 text-sm">Explora exámenes compartidos públicamente por la comunidad de estudiantes.</p>
                                 </div>
 
-                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
-                                    <div className="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                                        <Icon name="search" className="w-4 h-4 text-slate-400 mr-2" />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Buscar por asignatura o título..." 
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="bg-transparent text-sm w-full outline-none"
-                                        />
+                                {publicExams.length === 0 ? (
+                                    <div className="bg-white p-12 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400 space-y-3">
+                                        <Icon name="book-open" className="w-12 h-12 mx-auto text-slate-300" />
+                                        <h3 className="text-lg font-bold text-slate-700">Aún no hay exámenes en la comunidad</h3>
+                                        <p className="text-xs text-slate-400 max-w-md mx-auto">
+                                            Sé el primero en publicar un examen cambiando el interruptor de "Privado" a "Público" al finalizar una prueba.
+                                        </p>
                                     </div>
-
-                                    <div className="w-full md:w-64">
-                                        <select 
-                                            value={filterUniversity}
-                                            onChange={(e) => setFilterUniversity(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 outline-none">
-                                            <option value="">Todas las Universidades</option>
-                                            <option value="Universidad Complutense de Madrid">U. Complutense de Madrid</option>
-                                            <option value="Universidad de Barcelona">U. de Barcelona</option>
-                                            <option value="Universidad Politécnica de Valencia">U. Politécnica de Valencia</option>
-                                            <option value="Universidad de Sevilla">U. de Sevilla</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {publicExams
-                                        .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.subject.toLowerCase().includes(searchQuery.toLowerCase()))
-                                        .filter(item => filterUniversity === '' || item.university === filterUniversity)
-                                        .map((exam) => (
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {publicExams.map((exam) => (
                                             <div key={exam.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:border-brand-300 transition">
                                                 <div>
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span className="text-xs font-semibold px-2.5 py-1 bg-brand-50 text-brand-700 rounded-md">
-                                                            {exam.subject}
-                                                        </span>
-                                                        <div className="flex items-center text-amber-500 text-xs font-bold space-x-1">
-                                                            <Icon name="star" className="w-3.5 h-3.5" />
-                                                            <span>{exam.rating}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <h3 className="font-bold text-slate-800 text-base mb-1">{exam.title}</h3>
+                                                    <span className="text-xs font-semibold px-2.5 py-1 bg-brand-50 text-brand-700 rounded-md">
+                                                        {exam.subject}
+                                                    </span>
+                                                    <h3 className="font-bold text-slate-800 text-base mt-2">{exam.title}</h3>
                                                     <p className="text-xs text-slate-500 mb-4">{exam.university} • Creado por {exam.author}</p>
                                                 </div>
 
-                                                <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
-                                                    <span className="text-xs font-medium text-slate-400 flex items-center">
-                                                        <Icon name="help-circle" className="w-3.5 h-3.5 mr-1" />
-                                                        {exam.questions} preguntas
-                                                    </span>
-                                                    <button 
-                                                        onClick={() => handlePracticeExam(exam)}
-                                                        className="px-4 py-2 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 text-xs font-bold rounded-xl transition flex items-center space-x-1">
-                                                        <span>Practicar ahora</span>
-                                                        <Icon name="arrow-right" className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
+                                                <button 
+                                                    onClick={() => handlePracticeExam(exam)}
+                                                    className="px-4 py-2 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 text-xs font-bold rounded-xl transition flex items-center justify-between">
+                                                    <span>Practicar ahora</span>
+                                                    <Icon name="arrow-right" className="w-3.5 h-3.5" />
+                                                </button>
                                             </div>
                                         ))}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </main>
 
-                    {/* MODAL COMPLETAMENTE FUNCIONAL */}
+                    {/* MODAL: AÑADIR ASIGNATURA */}
                     {showModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-slate-800">Añadir Asignatura y Examen</h3>
+                                    <h3 className="text-lg font-bold text-slate-800">Nueva Asignatura</h3>
                                     <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
                                         <Icon name="x" className="w-5 h-5" />
                                     </button>
@@ -1016,7 +1144,7 @@
                                             required
                                             value={subjectNameInput}
                                             onChange={(e) => setSubjectNameInput(e.target.value)}
-                                            placeholder="Ej. Farmacología, Estadística, etc." 
+                                            placeholder="Ej. Farmacología, Derecho Mercantil..." 
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
                                         />
                                     </div>
@@ -1029,19 +1157,6 @@
                                             onChange={(e) => setSubjectExamDateInput(e.target.value)}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white"
                                         />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Evaluación</label>
-                                        <select 
-                                            value={subjectExamTypeInput}
-                                            onChange={(e) => setSubjectExamTypeInput(e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
-                                            <option value="Examen Parcial">Examen Parcial</option>
-                                            <option value="Examen Final">Examen Final</option>
-                                            <option value="Entrega de Práctica">Entrega de Práctica</option>
-                                            <option value="Test / Quiz">Test / Quiz</option>
-                                        </select>
                                     </div>
 
                                     <div className="flex space-x-3 justify-end pt-2">
@@ -1058,6 +1173,62 @@
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL: CONFIGURAR EXAMEN IA */}
+                    {showExamConfigModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-lg font-bold text-slate-800">Configurador de Examen IA</h3>
+                                    <button onClick={() => setShowExamConfigModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <Icon name="x" className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Formato de Preguntas</label>
+                                        <select 
+                                            value={examConfig.format}
+                                            onChange={(e) => setExamConfig({ ...examConfig, format: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
+                                            <option value="test">Tipo Test (Opción múltiple)</option>
+                                            <option value="short">Preguntas Cortas</option>
+                                            <option value="long">Preguntas Largas / Desarrollo</option>
+                                            <option value="mixed">Examen Mixto (Combinado)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Número de Preguntas</label>
+                                        <select 
+                                            value={examConfig.questionCount}
+                                            onChange={(e) => setExamConfig({ ...examConfig, questionCount: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
+                                            <option value="10">10 Preguntas (Rápido)</option>
+                                            <option value="15">15 Preguntas (Estándar)</option>
+                                            <option value="25">25 Preguntas (Extenso)</option>
+                                            <option value="30">30 Preguntas (Examen Completo)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex space-x-3 justify-end pt-2">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowExamConfigModal(false)}
+                                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                                            Cancelar
+                                        </button>
+                                        <button 
+                                            onClick={handleGenerateExamFromConfig}
+                                            className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
+                                            Generar Examen
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
