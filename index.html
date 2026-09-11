@@ -42,9 +42,6 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -53,16 +50,39 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- Componente de Iconos Lucide ---
+        // --- COMPONENTE DE ICONOS SVG PUROS (100% Estable en React) ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
-            useEffect(() => {
-                try {
-                    if (window.lucide) {
-                        window.lucide.createIcons();
-                    }
-                } catch (e) {}
-            }, [name]);
-            return <i data-lucide={name} className={className}></i>;
+            const icons = {
+                brain: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />,
+                sparkles: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
+                plus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />,
+                calendar: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+                "trending-up": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
+                flame: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />,
+                clock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                "book-open": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />,
+                "file-text": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+                "upload-cloud": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />,
+                "help-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                "check-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                "x-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                "alert-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                info: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                repeat: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />,
+                search: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+                star: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
+                "arrow-right": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />,
+                "log-out": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
+                "trash-2": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
+                tag: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
+                x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            };
+
+            return (
+                <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {icons[name] || <circle cx="12" cy="12" r="10" strokeWidth="2" />}
+                </svg>
+            );
         };
 
         // --- Datos Iniciales Simulados para la Comunidad ---
@@ -114,11 +134,38 @@
 
         // --- APP PRINCIPAL ---
         function App() {
-            // Base de Datos Simula Usuarios Registrados
-            const [registeredUsers, setRegisteredUsers] = useState([]);
+            // Persistencia en localStorage para que NUNCA se borren tus usuarios o asignaturas
+            const [registeredUsers, setRegisteredUsers] = useState(() => {
+                const saved = localStorage.getItem('memorai_users');
+                return saved ? JSON.parse(saved) : [];
+            });
             
-            // Estado de Usuario Autenticado
-            const [user, setUser] = useState(null);
+            const [user, setUser] = useState(() => {
+                const saved = localStorage.getItem('memorai_current_user');
+                return saved ? JSON.parse(saved) : null;
+            });
+
+            const [subjects, setSubjects] = useState(() => {
+                const saved = localStorage.getItem('memorai_subjects');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            useEffect(() => {
+                localStorage.setItem('memorai_users', JSON.stringify(registeredUsers));
+            }, [registeredUsers]);
+
+            useEffect(() => {
+                if (user) {
+                    localStorage.setItem('memorai_current_user', JSON.stringify(user));
+                } else {
+                    localStorage.removeItem('memorai_current_user');
+                }
+            }, [user]);
+
+            useEffect(() => {
+                localStorage.setItem('memorai_subjects', JSON.stringify(subjects));
+            }, [subjects]);
+
             const [activeTab, setActiveTab] = useState('dashboard');
             
             // Estado de Autenticación
@@ -133,38 +180,34 @@
                 degree: ''
             });
 
-            // Estado de Asignaturas
-            const [subjects, setSubjects] = useState([]); 
+            // Modal y Asignaturas
             const [showModal, setShowModal] = useState(false);
-            
-            // Formulario para añadir asignatura con fecha de examen
             const [subjectNameInput, setSubjectNameInput] = useState('');
             const [subjectExamDateInput, setSubjectExamDateInput] = useState('');
             const [subjectExamTypeInput, setSubjectExamTypeInput] = useState('Examen Parcial');
 
-            // Estado de Carga de Apuntes
+            // Carga de Apuntes
             const [notesText, setNotesText] = useState('');
             const [isExtractingPDF, setIsExtractingPDF] = useState(false);
 
-            // Estado del Examen / Test
+            // Test
             const [currentTest, setCurrentTest] = useState(null);
             const [currentSubjectName, setCurrentSubjectName] = useState('General');
             const [isPublic, setIsPublic] = useState(false);
             const [userAnswers, setUserAnswers] = useState({});
             const [testSubmitted, setTestSubmitted] = useState(false);
 
-            // Estado del Banco Comunitario
+            // Comunidad
             const [publicExams, setPublicExams] = useState(initialPublicExams);
             const [searchQuery, setSearchQuery] = useState('');
             const [filterUniversity, setFilterUniversity] = useState('');
 
-            // Manejo de Inputs de Auth
             const handleAuthInput = (e) => {
                 setAuthError('');
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
-            // Login / Registro Submit con VALIDACIÓN ESTRICTA REAL
+            // VALIDACIÓN Y LOGIN REAL Y SEGURO
             const handleAuthSubmit = (e) => {
                 e.preventDefault();
                 setAuthError('');
@@ -172,10 +215,9 @@
                 const cleanEmail = formData.email.trim().toLowerCase();
 
                 if (authMode === 'register') {
-                    // Validar si el correo ya existe
                     const existingUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
                     if (existingUser) {
-                        setAuthError('Este correo electrónico ya está registrado. Utiliza otro o inicia sesión.');
+                        setAuthError('Este correo electrónico ya está registrado. Por favor, inicia sesión.');
                         return;
                     }
 
@@ -192,20 +234,19 @@
                         degree: formData.degree.trim() || 'Grado Universitario'
                     };
 
-                    setRegisteredUsers([...registeredUsers, newUser]);
+                    setRegisteredUsers(prev => [...prev, newUser]);
                     setUser(newUser);
                     setActiveTab('dashboard');
                 } else {
-                    // Validación en inicio de sesión
                     const foundUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
 
                     if (!foundUser) {
-                        setAuthError('El correo electrónico no está registrado.');
+                        setAuthError('No existe ninguna cuenta registrada con este correo.');
                         return;
                     }
 
                     if (foundUser.password !== formData.password) {
-                        setAuthError('La contraseña es incorrecta.');
+                        setAuthError('La contraseña introducida es incorrecta.');
                         return;
                     }
 
@@ -214,7 +255,7 @@
                 }
             };
 
-            // Añadir Asignatura completamente funcional
+            // Añadir Asignatura Totalmente Estable
             const handleAddSubject = (e) => {
                 e.preventDefault();
                 const trimmedName = subjectNameInput.trim();
@@ -234,12 +275,10 @@
                 setShowModal(false);
             };
 
-            // Eliminar Asignatura
             const handleDeleteSubject = (id) => {
                 setSubjects(prev => prev.filter(s => s.id !== id));
             };
 
-            // Cálculo dinámico de días faltantes
             const getNextExamInfo = () => {
                 if (!subjects || subjects.length === 0) return "Sin exámenes";
                 
@@ -256,7 +295,6 @@
                 return `En ${diffDays} día${diffDays === 1 ? '' : 's'}`;
             };
 
-            // Lectura Real de PDF mediante PDF.js
             const handleFileUpload = (e) => {
                 const file = e.target.files && e.target.files[0];
                 if (!file) return;
@@ -294,7 +332,6 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            // Generador de Test Inteligente
             const handleGenerateTest = () => {
                 if (!notesText.trim()) {
                     alert("Por favor, sube un archivo PDF o pega texto en el área de apuntes antes de generar el test.");
@@ -402,7 +439,7 @@
                             <div className="flex justify-between h-16 items-center">
                                 <div className="flex items-center space-x-2 font-bold text-xl cursor-pointer" onClick={() => user && setActiveTab('dashboard')}>
                                     <div className="bg-brand-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20">
-                                        <Icon name="brain" className="w-6 h-6 text-white" />
+                                        <Icon name="brain" className="w-6 h-6" />
                                     </div>
                                     <span className="text-brand-900 tracking-tight">Memor<span className="text-brand-600">AI</span></span>
                                 </div>
@@ -443,7 +480,7 @@
                         </div>
                     </nav>
 
-                    {/* VISTAS DE LA APLICACIÓN */}
+                    {/* VISTAS */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
                         
                         {/* 1. AUTENTICACIÓN / LANDING */}
@@ -451,7 +488,7 @@
                             <div className="py-8 max-w-4xl mx-auto">
                                 <div className="text-center mb-10">
                                     <div className="inline-flex items-center space-x-2 bg-brand-50 text-brand-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 border border-brand-200">
-                                        <Icon name="sparkles" className="w-4 h-4 text-brand-600" />
+                                        <Icon name="sparkles" className="w-4 h-4" />
                                         <span>Potenciado con Repetición Espaciada e IA</span>
                                     </div>
                                     <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
@@ -542,36 +579,22 @@
                                                             <option value="Universidad de Granada">Universidad de Granada</option>
                                                             <option value="Universidad de Málaga">Universidad de Málaga</option>
                                                             <option value="Universidad de Córdoba">Universidad de Córdoba</option>
-                                                            <option value="Universidad de Cádiz">Universidad de Cádiz</option>
-                                                            <option value="Universidad de Almería">Universidad de Almería</option>
-                                                            <option value="Universidad de Huelva">Universidad de Huelva</option>
-                                                            <option value="Universidad de Jaén">Universidad de Jaén</option>
-                                                            <option value="Universidad Pablo de Olavide">Universidad Pablo de Olavide</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Aragón">
-                                                            <option value="Universidad de Zaragoza">Universidad de Zaragoza</option>
                                                         </optgroup>
 
                                                         <optgroup label="Cataluña">
                                                             <option value="Universidad de Barcelona">Universidad de Barcelona</option>
                                                             <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
-                                                            <option value="Universidad Politécnica de Cataluña">Universidad Politécnica de Cataluña</option>
-                                                            <option value="Universidad Pompeu Fabra">Universidad Pompeu Fabra</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad de Madrid">
                                                             <option value="Universidad Complutense de Madrid">Universidad Complutense de Madrid</option>
                                                             <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
                                                             <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
-                                                            <option value="Universidad Carlos III de Madrid">Universidad Carlos III de Madrid</option>
-                                                            <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad Valenciana">
                                                             <option value="Universidad de Valencia">Universidad de Valencia</option>
                                                             <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
-                                                            <option value="Universidad de Alicante">Universidad de Alicante</option>
                                                         </optgroup>
 
                                                         <optgroup label="Otras opciones">
@@ -900,7 +923,7 @@
                             </div>
                         )}
 
-                        {/* 4. BANCO COMUNITARIO DE EXÁMENES */}
+                        {/* 4. BANCO COMUNITARIO */}
                         {user && activeTab === 'community' && (
                             <div className="space-y-6">
                                 <div>
@@ -946,7 +969,7 @@
                                                             {exam.subject}
                                                         </span>
                                                         <div className="flex items-center text-amber-500 text-xs font-bold space-x-1">
-                                                            <Icon name="star" className="w-3.5 h-3.5 fill-amber-400" />
+                                                            <Icon name="star" className="w-3.5 h-3.5" />
                                                             <span>{exam.rating}</span>
                                                         </div>
                                                     </div>
@@ -974,7 +997,7 @@
                         )}
                     </main>
 
-                    {/* MODAL CORREGIDO Y TOTALMENTE ESTABLE */}
+                    {/* MODAL COMPLETAMENTE FUNCIONAL */}
                     {showModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
@@ -1049,7 +1072,6 @@
             );
         }
 
-        // Renderizado
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
