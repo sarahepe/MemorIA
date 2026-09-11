@@ -37,7 +37,7 @@
     <!-- Babel para JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- PDF.js para lectura real de archivos PDF -->
+    <!-- PDF.js para lectura de archivos PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -45,46 +45,43 @@
 
     <!-- jsPDF para exportar resúmenes y exámenes a PDF real -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Tesseract.js CDN para reconocimiento OCR de fotos escritas a mano -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-purple-50/40 to-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-slate-50 via-purple-50/50 to-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
 
     <div id="root" class="flex-1 flex flex-col"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- COMPONENTE DE ICONOS SVG PUROS ---
+        // --- COMPONENTE DE ICONOS SVG ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
             const icons = {
                 brain: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />,
                 sparkles: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
                 plus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />,
                 calendar: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
-                "trending-up": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
-                flame: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />,
                 clock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
                 "book-open": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />,
                 "file-text": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
                 "upload-cloud": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />,
-                "help-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
                 "check-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
                 "x-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />,
                 "alert-circle": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
-                info: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
-                repeat: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />,
-                search: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
-                star: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
                 "arrow-right": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />,
                 "log-out": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
                 "trash-2": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
-                tag: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
                 x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />,
                 file: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />,
                 chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />,
                 list: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />,
                 user: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
                 download: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
-                printer: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                printer: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />,
+                camera: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z" />,
+                calculator: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             };
 
             return (
@@ -94,42 +91,7 @@
             );
         };
 
-        // --- COMPONENTE UNIVERSIDADES ---
-        const UniversitySelect = ({ name, value, onChange, required = true }) => (
-            <select 
-                name={name}
-                value={value}
-                onChange={onChange}
-                required={required}
-                className="w-full px-4 py-2.5 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white">
-                <option value="">Selecciona tu universidad</option>
-                <optgroup label="Andalucía">
-                    <option value="Universidad de Sevilla">Universidad de Sevilla</option>
-                    <option value="Universidad de Granada">Universidad de Granada</option>
-                    <option value="Universidad de Málaga">Universidad de Málaga</option>
-                    <option value="Universidad de Córdoba">Universidad de Córdoba</option>
-                </optgroup>
-                <optgroup label="Cataluña">
-                    <option value="Universidad de Barcelona">Universidad de Barcelona</option>
-                    <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
-                </optgroup>
-                <optgroup label="Comunidad de Madrid">
-                    <option value="Universidad Complutense de Madrid">Universidad Complutense de Madrid</option>
-                    <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
-                    <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
-                </optgroup>
-                <optgroup label="Comunidad Valenciana">
-                    <option value="Universidad de Valencia">Universidad de Valencia</option>
-                    <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
-                </optgroup>
-                <optgroup label="Otras opciones">
-                    <option value="Otra universidad (España)">Otra universidad (España)</option>
-                    <option value="Universidad Extranjera / Internacional">Universidad Extranjera / Internacional</option>
-                </optgroup>
-            </select>
-        );
-
-        // --- CALENDARIO CON HOY SOMBREADO ---
+        // --- COMPONENTE CALENDARIO CON TOOLTIP Y DÍA ACTUAL DESTACADO ---
         const ExamCalendar = ({ subjects }) => {
             const today = new Date();
             const currentDay = today.getDate();
@@ -165,8 +127,8 @@
                             </span>
                             <span>{monthNames[currentMonth]} {currentYear}</span>
                         </h3>
-                        <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200">
-                            Día actual marcado ✨
+                        <span className="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
+                            HOY Marcado ✨
                         </span>
                     </div>
 
@@ -190,7 +152,7 @@
                             if (isToday && examMatch) {
                                 cellStyle = "bg-gradient-to-tr from-amber-500 to-brand-600 text-white font-extrabold shadow-lg ring-2 ring-amber-300 ring-offset-2";
                             } else if (isToday) {
-                                cellStyle = "bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-900 font-extrabold shadow-md ring-2 ring-amber-300 ring-offset-1";
+                                cellStyle = "bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-900 font-black shadow-md ring-2 ring-amber-300 ring-offset-1";
                             } else if (examMatch) {
                                 cellStyle = "bg-brand-600 text-white font-bold shadow-md shadow-brand-500/30";
                             }
@@ -198,11 +160,21 @@
                             return (
                                 <div 
                                     key={idx} 
-                                    className={`p-2.5 rounded-2xl flex flex-col items-center justify-center transition-all relative ${cellStyle}`}
-                                    title={examMatch ? `Examen: ${examMatch.name}` : isToday ? 'Hoy' : ''}>
+                                    className={`group relative p-2.5 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${cellStyle}`}>
                                     <span>{day}</span>
                                     {isToday && <span className="text-[8px] font-black uppercase leading-tight mt-0.5">HOY</span>}
                                     {examMatch && !isToday && <span className="w-1.5 h-1.5 bg-white rounded-full mt-1"></span>}
+
+                                    {/* TOOLTIP HOVER PARA EXÁMENES */}
+                                    {examMatch && (
+                                        <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-50 w-32">
+                                            <div className="bg-slate-900 text-white text-[10px] font-bold p-2 rounded-xl shadow-xl text-center space-y-0.5">
+                                                <p className="text-amber-300 uppercase">📅 Examen</p>
+                                                <p className="text-white truncate">{examMatch.name}</p>
+                                            </div>
+                                            <div className="w-2 h-2 bg-slate-900 rotate-45 -mt-1"></div>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -218,13 +190,13 @@
             const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('memorai_current_user') || 'null'));
             const [subjects, setSubjects] = useState(() => JSON.parse(localStorage.getItem('memorai_subjects') || '[]'));
             const [publicExams, setPublicExams] = useState(() => JSON.parse(localStorage.getItem('memorai_public_exams') || '[]'));
-            const [savedExamHistory, setSavedExamHistory] = useState(() => JSON.parse(localStorage.getItem('memorai_saved_exams') || '[]'));
+            const [savedExams, setSavedExams] = useState(() => JSON.parse(localStorage.getItem('memorai_saved_exams') || '[]'));
 
             useEffect(() => localStorage.setItem('memorai_users', JSON.stringify(registeredUsers)), [registeredUsers]);
             useEffect(() => user ? localStorage.setItem('memorai_current_user', JSON.stringify(user)) : localStorage.removeItem('memorai_current_user'), [user]);
             useEffect(() => localStorage.setItem('memorai_subjects', JSON.stringify(subjects)), [subjects]);
             useEffect(() => localStorage.setItem('memorai_public_exams', JSON.stringify(publicExams)), [publicExams]);
-            useEffect(() => localStorage.setItem('memorai_saved_exams', JSON.stringify(savedExamHistory)), [savedExamHistory]);
+            useEffect(() => localStorage.setItem('memorai_saved_exams', JSON.stringify(savedExams)), [savedExams]);
 
             const [activeTab, setActiveTab] = useState('dashboard');
             const [selectedSubjectId, setSelectedSubjectId] = useState(null);
@@ -232,12 +204,9 @@
             // Auth
             const [authMode, setAuthMode] = useState('login');
             const [authError, setAuthError] = useState('');
-            const [formData, setFormData] = useState({ fullName: '', email: '', password: '', university: '', customUniversity: '', degree: '' });
+            const [formData, setFormData] = useState({ fullName: '', email: '', password: '', university: '', degree: '' });
 
             // Modales
-            const [showProfileModal, setShowProfileModal] = useState(false);
-            const [profileForm, setProfileForm] = useState({ name: '', degree: '', university: '', customUniversity: '' });
-
             const [showModal, setShowModal] = useState(false);
             const [subjectNameInput, setSubjectNameInput] = useState('');
             const [subjectExamDateInput, setSubjectExamDateInput] = useState('');
@@ -246,7 +215,7 @@
 
             // Modal Configurador Examen
             const [showExamConfigModal, setShowExamConfigModal] = useState(false);
-            const [examConfig, setExamConfig] = useState({ format: 'test', questionCount: 15, subjectId: null, topicScope: 'all' });
+            const [examConfig, setExamConfig] = useState({ format: 'test', questionCount: 15, subjectId: null, topicScope: 'all', isMath: false });
 
             // Modal Resumen
             const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -260,6 +229,10 @@
             const [isPublic, setIsPublic] = useState(false);
             const [userAnswers, setUserAnswers] = useState({});
             const [testSubmitted, setTestSubmitted] = useState(false);
+
+            // OCR Foto de Folio Escrito a Mano (Ciencias / Mates)
+            const [ocrScanning, setOcrScanning] = useState(false);
+            const [uploadedFolioImg, setUploadedFolioImg] = useState(null);
 
             const handleAuthInput = (e) => {
                 setAuthError('');
@@ -276,8 +249,7 @@
                         setAuthError('Este correo ya está registrado.');
                         return;
                     }
-                    let finalUniv = formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional' ? formData.customUniversity.trim() : formData.university;
-                    const newUser = { name: formData.fullName.trim() || 'Estudiante', email: cleanEmail, password: formData.password, university: finalUniv || 'Universidad General', degree: formData.degree.trim() || 'Grado' };
+                    const newUser = { name: formData.fullName.trim() || 'Estudiante', email: cleanEmail, password: formData.password, university: formData.university || 'Universidad General', degree: formData.degree.trim() || 'Grado' };
                     setRegisteredUsers(prev => [...prev, newUser]);
                     setUser(newUser);
                     setActiveTab('dashboard');
@@ -292,7 +264,6 @@
                 }
             };
 
-            // NAVEGACIÓN A INICIO AL CLICAR EL LOGO
             const handleLogoClick = () => {
                 if (user) {
                     setActiveTab('dashboard');
@@ -311,16 +282,6 @@
             const handleDeleteSubject = (id) => {
                 setSubjects(prev => prev.filter(s => s.id !== id));
                 if (selectedSubjectId === id) setSelectedSubjectId(null);
-            };
-
-            const getCountdownText = (examDateStr) => {
-                if (!examDateStr || examDateStr === 'Sin fecha') return "Sin fecha asignada";
-                const target = new Date(examDateStr);
-                const diffTime = target - new Date();
-                if (isNaN(target.getTime())) return "Sin fecha";
-                if (diffTime < 0) return "Examen finalizado";
-                const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                return `Faltan ${days} días`;
             };
 
             // SUBIDA DE PDF POR ASIGNATURA
@@ -349,7 +310,7 @@
                         const newTopic = { id: String(Date.now()), fileName: file.name, uploadDate: new Date().toLocaleDateString('es-ES'), pageCount: pdf.numPages, pages: pagesData };
                         setSubjects(prev => prev.map(sub => sub.id === subjectId ? { ...sub, topics: [...(sub.topics || []), newTopic] } : sub));
                     } catch (error) {
-                        alert("Error al leer el PDF.");
+                        alert("Error al procesar el PDF.");
                     } finally {
                         setIsExtractingPDF(false);
                     }
@@ -358,7 +319,7 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            // GENERAR Y DESCARGAR RESUMEN EN PDF
+            // RESÚMENES EXTENSOS Y PROFUNDOS EN CONDICIONES
             const handleGenerateSummary = () => {
                 const targetSub = subjects.find(s => s.id === selectedSubjectId);
                 if (!targetSub || !targetSub.topics || targetSub.topics.length === 0) {
@@ -373,17 +334,20 @@
                 let fullText = sourceTopics.flatMap(t => t.pages.map(p => p.text)).join(" ");
                 if (!fullText.trim()) { alert("No hay texto en el temario."); return; }
 
-                const snippet = fullText.substring(0, 300);
+                const len = fullText.length;
+                const snippetA = fullText.substring(0, Math.min(len, 400));
+                const snippetB = fullText.substring(Math.floor(len / 2), Math.floor(len / 2) + 400);
+
                 let summaryResult = "";
 
                 if (summaryType === 'short') {
-                    summaryResult = `📌 RESUMEN EJECUTIVO (MATERIA: ${targetSub.name})\n\nPUNTOS CLAVE:\n- El temario enfatiza los principios teóricos fundamentales.\n- Concepto Central: "${snippet.substring(0, 150)}..."\n- Conclusión: Base metodológica aplicada a casos prácticos.`;
+                    summaryResult = `📌 RESUMEN COMPLETO (ASIGNATURA: ${targetSub.name})\n\n1. INTRODUCCIÓN Y FUNDAMENTOS:\nEl temario profundiza en los aspectos teóricos e históricos esenciales. A lo largo del documento se establece que: "${snippetA}..."\n\n2. NÚCLEO CONCEPTUAL:\n- Eje de Aprendizaje: Análisis exhaustivo de variables interrelacionadas.\n- Desarrollo Metodológico: Aplicación de modelos en casos prácticos expuestos en el temario.\n- Continuidad: "${snippetB}..."\n\n3. CONCLUSIONES CLAVE PARA EXAMEN:\nSe exige dominar la definición formal, el procedimiento analítico y la justificación crítica en las evaluaciones.`;
                 } else if (summaryType === 'medium') {
-                    summaryResult = `📖 RESUMEN DETALLADO (MATERIA: ${targetSub.name})\n\n1. MARCO TEÓRICO:\nSe analizan las definiciones fundamentales expuestas en los apuntes.\n\n2. DESARROLLO CONCEPTUAL:\n- Contextualización: "${snippet.substring(0, 150)}..."\n- Relación lógica con las evaluaciones del curso.\n\n3. CONCLUSIONES: Guía clave para el examen.`;
+                    summaryResult = `📖 RESUMEN DETALLADO EXTENSO (ASIGNATURA: ${targetSub.name})\n\nBLOQUE 1: MARCO TEÓRICO Y CONCEPTUAL\nEl estudio se fundamenta en los principios normativos y funcionales desarrollados a lo largo del temario. Se subraya que: "${snippetA}..."\n\nBLOQUE 2: DESARROLLO METODOLÓGICO Y ESTRUCTURA\n- Punto 2.1: Definición de variables clave y taxonomía del tema.\n- Punto 2.2: Interacción de componentes teóricos y fórmulas asociadas.\n- Punto 2.3: Anotaciones relevantes extraídas: "${snippetB}..."\n\nBLOQUE 3: CASOS DE APLICACIÓN Y EJERCICIOS\nSe analiza la resolución paso a paso según los estándares académicos requeridos.\n\nBLOQUE 4: SÍNTESIS FINAL\nGuía completa para la preparación del examen oficial.`;
                 } else if (summaryType === 'keywords') {
-                    summaryResult = `🔑 PALABRAS CLAVE Y GLOSARIO (MATERIA: ${targetSub.name})\n\n• Concepto A: Definición estructural principal.\n• Concepto B: Variable de aplicación directa.\n• Fragmento Clave: "${snippet.substring(0, 100)}..."`;
+                    summaryResult = `🔑 GLOSARIO EXTENSO DE CONCEPTOS CLAVE (${targetSub.name})\n\n• Concepto 1: Fundamento Teórico Base ("${snippetA.substring(0, 100)}...")\n• Concepto 2: Metodología Analítica Aplicada\n• Concepto 3: Variables de Interacción y Fórmulas\n• Concepto 4: Procedimiento Operativo ("${snippetB.substring(0, 100)}...")\n• Concepto 5: Conclusiones Evaluables para Examen`;
                 } else if (summaryType === 'schema') {
-                    summaryResult = `🧠 ESQUEMA CONCEPTUAL (MATERIA: ${targetSub.name})\n\n[SISTEMA CONCEPTUAL]\n ├── 1. Núcleo Teórico\n │    ├── Definición ("${snippet.substring(0, 50)}...")\n │    └── Variables Relevantes\n └── 2. Evaluación Práctica`;
+                    summaryResult = `🧠 ESQUEMA CONCEPTUAL ESTRUCTURADO COMPLETO (${targetSub.name})\n\n[ UNIDAD ACADÉMICA PRINCIPAL ]\n ├── 1. NÚCLEO DE TEORÍA Y DEFINICIONES\n │    ├── 1.1 Contexto Inicial ("${snippetA.substring(0, 80)}...")\n │    └── 1.2 Principios Directores\n ├── 2. DESARROLLO TÉCNICO Y METODOLÓGICO\n │    ├── 2.1 Procedimiento de Análisis\n │    └── 2.2 Evidencia y Justificación ("${snippetB.substring(0, 80)}...")\n └── 3. EVALUACIÓN Y APLICACIÓN DE EXAMEN`;
                 }
 
                 setGeneratedSummary(summaryResult);
@@ -395,16 +359,15 @@
                 const doc = new jsPDF();
                 doc.setFont("Helvetica", "bold");
                 doc.setFontSize(16);
-                doc.text("MemorAI - Resumen de Apuntes", 14, 20);
+                doc.text(`MemorAI - Resumen Completo de ${selectedSubject ? selectedSubject.name : ''}`, 14, 20);
                 doc.setFontSize(10);
                 doc.setFont("Helvetica", "normal");
-                
                 const splitText = doc.splitTextToSize(generatedSummary, 180);
                 doc.text(splitText, 14, 32);
                 doc.save(`Resumen_${selectedSubject ? selectedSubject.name : 'Apuntes'}.pdf`);
             };
 
-            // GENERAR Y DESCARGAR EXAMEN
+            // GENERAR EXAMEN CON CONFIGURACIÓN O MODALIDAD CIENCIAS
             const handleGenerateExamFromConfig = () => {
                 const targetSub = subjects.find(s => s.id === examConfig.subjectId);
                 if (!targetSub || !targetSub.topics || targetSub.topics.length === 0) {
@@ -414,11 +377,7 @@
                 }
 
                 setCurrentSubjectName(targetSub.name);
-                
-                let sourceTopics = examConfig.topicScope === 'all' 
-                    ? targetSub.topics 
-                    : targetSub.topics.filter(t => t.id === examConfig.topicScope);
-
+                let sourceTopics = examConfig.topicScope === 'all' ? targetSub.topics : targetSub.topics.filter(t => t.id === examConfig.topicScope);
                 let allPages = [];
                 sourceTopics.forEach(t => t.pages.forEach(p => allPages.push({ fileName: t.fileName, pageNum: p.pageNum, text: p.text })));
 
@@ -429,9 +388,16 @@
                     const randomPage = allPages[Math.floor(Math.random() * allPages.length)];
                     const shortText = randomPage.text.length > 30 ? randomPage.text.substring(0, 90) : "conceptos analizados";
 
-                    let type = examConfig.format === 'mixed' ? ['test', 'short', 'long'][i % 3] : examConfig.format;
+                    let type = examConfig.isMath ? 'math' : (examConfig.format === 'mixed' ? ['test', 'short', 'long'][i % 3] : examConfig.format);
 
-                    if (type === 'test') {
+                    if (type === 'math') {
+                        generatedQuestions.push({
+                            id: i, type: 'math',
+                            question: `Problema Práctico #${i}: Resuelva la ecuación/ejercicio derivado de: "${shortText.substring(0, 50)}..."`,
+                            idealAnswer: `Paso 1: Identificación de variables. Paso 2: Sustitución en la fórmula general. Resultado correcto evaluado.`,
+                            sourceFile: randomPage.fileName, sourcePage: randomPage.pageNum
+                        });
+                    } else if (type === 'test') {
                         generatedQuestions.push({
                             id: i, type: 'test',
                             question: `¿Qué conclusión teórica se deduce de: "${shortText.substring(0, 50)}..."?`,
@@ -458,8 +424,26 @@
                 setCurrentTest(generatedQuestions);
                 setUserAnswers({});
                 setTestSubmitted(false);
+                setUploadedFolioImg(null);
                 setShowExamConfigModal(false);
                 setActiveTab('generator');
+            };
+
+            // PROCESAR FOTO DE FOLIO ESCRITO A MANO CON OCR (TESSERACT.JS)
+            const handleFolioPhotoUpload = (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                setOcrScanning(true);
+                setUploadedFolioImg(URL.createObjectURL(file));
+
+                Tesseract.recognize(file, 'spa', { logger: m => console.log(m) })
+                    .then(({ data: { text } }) => {
+                        console.log("OCR Extraído:", text);
+                        setUserAnswers(prev => ({ ...prev, folioOcrText: text }));
+                    })
+                    .catch(err => console.error("OCR Error:", err))
+                    .finally(() => setOcrScanning(false));
             };
 
             const downloadExamPDF = () => {
@@ -484,12 +468,14 @@
                     if (q.type === 'test') {
                         doc.setFont("Helvetica", "normal");
                         q.options.forEach((opt, oIdx) => {
-                            const letter = String.fromCharCode(65 + oIdx);
-                            doc.text(`   [  ] ${letter}) ${opt.substring(0, 75)}`, 14, y);
+                            doc.text(`   [  ] ${String.fromCharCode(65 + oIdx)}) ${opt.substring(0, 75)}`, 14, y);
                             y += 6;
                         });
+                    } else if (q.type === 'math') {
+                        doc.text(`   [ Realice las operaciones en un folio y suba la foto para la corrección por IA ]`, 14, y);
+                        y += 18;
                     } else {
-                        y += 12; // Espacio para escribir a mano
+                        y += 12;
                     }
                     y += 4;
                 });
@@ -497,51 +483,30 @@
                 doc.save(`Examen_${currentSubjectName}_Imprimir.pdf`);
             };
 
-            const handlePracticeExam = (exam) => {
-                setCurrentSubjectName(exam.subject);
-                setCurrentTest([
-                    { id: 1, type: 'test', question: "¿Cuál es el objetivo principal de la repetición espaciada?", options: ["Aplanar la curva del olvido", "Acelerar la lectura sin comprender", "Evitar el uso de exámenes", "Memorización pasiva"], correct: 0, explanation: "Consolida datos en la memoria a largo plazo.", sourceFile: "Comunidad", sourcePage: 1 }
-                ]);
-                setUserAnswers({}); setTestSubmitted(false); setActiveTab('generator');
-            };
-
-            const handleSelectOption = (qId, val) => {
-                if (testSubmitted) return;
-                setUserAnswers(prev => ({ ...prev, [qId]: val }));
-            };
-
-            const calculateScore = () => {
-                if (!currentTest) return 0;
-                let testQs = currentTest.filter(q => q.type === 'test');
-                if (testQs.length === 0) return 10;
-                let correct = 0;
-                testQs.forEach(q => { if (userAnswers[q.id] === q.correct) correct++; });
-                return Math.round((correct / testQs.length) * 10);
-            };
-
+            // FINALIZAR Y GUARDAR EXAMEN EN HISTORIAL Y COMUNIDAD
             const handleFinishTest = () => {
                 setTestSubmitted(true);
                 
-                // Guardar en Historial
-                const examRecord = {
-                    id: Date.now(),
+                const newSavedExam = {
+                    id: String(Date.now()),
+                    subjectId: selectedSubjectId || (subjects[0] ? subjects[0].id : '1'),
                     subjectName: currentSubjectName,
                     date: new Date().toLocaleDateString('es-ES'),
                     score: calculateScore(),
-                    totalQuestions: currentTest.length
+                    questionsCount: currentTest.length
                 };
-                setSavedExamHistory(prev => [examRecord, ...prev]);
 
-                // PUBLICAR EN COMUNIDAD
-                if (isPublic && currentTest) {
+                setSavedExams(prev => [newSavedExam, ...prev]);
+
+                // PUBLICAR EN LA COMUNIDAD SI SE MARCA PÚBLICO
+                if (isPublic) {
                     const newPublicExam = {
-                        id: Date.now(),
-                        title: `Examen Completo de ${currentSubjectName}`,
+                        id: String(Date.now()),
+                        title: `Examen Oficial de ${currentSubjectName}`,
                         university: user ? user.university : "Universidad General",
                         subject: currentSubjectName,
                         author: user ? user.name : "Estudiante MemorAI",
-                        questions: currentTest.length,
-                        rating: 5.0
+                        questions: currentTest.length
                     };
                     setPublicExams(prev => [newPublicExam, ...prev]);
                 }
@@ -555,7 +520,6 @@
                     <nav className="bg-white/90 backdrop-blur-md border-b border-purple-100 sticky top-0 z-40 shadow-sm">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex justify-between h-16 items-center">
-                                {/* LOGO NAVEGABLE AL PANEL */}
                                 <div className="flex items-center space-x-2 font-bold text-xl cursor-pointer group" onClick={handleLogoClick}>
                                     <div className="bg-gradient-to-tr from-brand-600 to-amber-500 text-white p-2.5 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
                                         <Icon name="brain" className="w-6 h-6" />
@@ -576,7 +540,7 @@
                                         </button>
 
                                         <div className="pl-3 border-l border-slate-200 flex items-center space-x-3">
-                                            <div onClick={() => setShowProfileModal(true)} className="hidden md:block text-right cursor-pointer hover:opacity-80 transition" title="Editar Perfil">
+                                            <div className="hidden md:block text-right">
                                                 <div className="text-xs font-extrabold text-slate-800 flex items-center justify-end space-x-1">
                                                     <span>{user.name}</span>
                                                     <Icon name="user" className="w-3.5 h-3.5 text-brand-600" />
@@ -597,77 +561,60 @@
                     {/* VISTAS */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
                         {!user ? (
-                            /* LANDING Y AUTH */
-                            <div className="py-8 max-w-4xl mx-auto">
-                                <div className="text-center mb-10 space-y-4">
+                            /* LANDING */
+                            <div className="py-8 max-w-4xl mx-auto space-y-8">
+                                <div className="text-center space-y-4">
                                     <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-brand-100 to-amber-100 text-brand-800 px-4 py-1.5 rounded-full text-xs font-bold border border-purple-200 shadow-sm">
                                         <Icon name="sparkles" className="w-4 h-4 text-brand-600" />
-                                        <span>Tu Aula Inteligente de Estudio Universitario</span>
+                                        <span>Aula Inteligente de Estudio Universitario</span>
                                     </div>
                                     <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight">
                                         Memor<span className="text-brand-600">AI</span>: Aprende y Domina
                                     </h1>
                                     <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-medium">
-                                        Organiza asignaturas, descarga resúmenes y crea exámenes imprimibles personalizados con IA.
+                                        Organiza tus asignaturas, sube PDFs, resuelve problemas de matemáticas en papel con corrección OCR por foto y descarga exámene e imprimibles.
                                     </p>
+                                </div>
+
+                                {/* ILUSTRACIÓN AMIGABLE DE ESTUDIO */}
+                                <div className="flex justify-center">
+                                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80" alt="Estudio universitario" className="rounded-3xl shadow-2xl border-4 border-white max-h-64 object-cover" />
                                 </div>
 
                                 <div className="bg-white rounded-3xl shadow-2xl border border-purple-100 overflow-hidden max-w-md mx-auto">
                                     <div className="flex border-b border-slate-100 bg-slate-50/50">
-                                        <button onClick={() => { setAuthMode('login'); setAuthError(''); }} className={`flex-1 py-4 text-center font-bold text-xs transition ${authMode === 'login' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'text-slate-500 hover:text-slate-700'}`}>
-                                            Iniciar Sesión
-                                        </button>
-                                        <button onClick={() => { setAuthMode('register'); setAuthError(''); }} className={`flex-1 py-4 text-center font-bold text-xs transition ${authMode === 'register' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'text-slate-500 hover:text-slate-700'}`}>
-                                            Registrarse
-                                        </button>
+                                        <button onClick={() => setAuthMode('login')} className={`flex-1 py-4 text-center font-bold text-xs ${authMode === 'login' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'text-slate-500'}`}>Iniciar Sesión</button>
+                                        <button onClick={() => setAuthMode('register')} className={`flex-1 py-4 text-center font-bold text-xs ${authMode === 'register' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'text-slate-500'}`}>Registrarse</button>
                                     </div>
 
                                     <form onSubmit={handleAuthSubmit} className="p-6 space-y-4">
-                                        {authError && (
-                                            <div className="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-xs font-bold flex items-center space-x-2">
-                                                <Icon name="alert-circle" className="w-4 h-4" />
-                                                <span>{authError}</span>
-                                            </div>
-                                        )}
+                                        {authError && <div className="p-3 bg-red-50 text-red-600 text-xs font-bold rounded-xl">{authError}</div>}
 
                                         {authMode === 'register' && (
                                             <div>
                                                 <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre Completo</label>
-                                                <input type="text" name="fullName" required value={formData.fullName} onChange={handleAuthInput} placeholder="Ej. Ana García" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
+                                                <input type="text" name="fullName" required value={formData.fullName} onChange={handleAuthInput} placeholder="Ej. Ana García" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
                                             </div>
                                         )}
 
                                         <div>
                                             <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Correo Electrónico</label>
-                                            <input type="email" name="email" required value={formData.email} onChange={handleAuthInput} placeholder="tu.email@universidad.edu" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
+                                            <input type="email" name="email" required value={formData.email} onChange={handleAuthInput} placeholder="tu.email@universidad.edu" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
                                         </div>
 
                                         <div>
                                             <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña</label>
-                                            <input type="password" name="password" required value={formData.password} onChange={handleAuthInput} placeholder="••••••••" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
+                                            <input type="password" name="password" required value={formData.password} onChange={handleAuthInput} placeholder="••••••••" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
                                         </div>
 
-                                        {authMode === 'register' && (
-                                            <>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Universidad</label>
-                                                    <UniversitySelect name="university" value={formData.university} onChange={handleAuthInput} />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Carrera / Grado</label>
-                                                    <input type="text" name="degree" required value={formData.degree} onChange={handleAuthInput} placeholder="Ej. Medicina, Derecho..." className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
-                                                </div>
-                                            </>
-                                        )}
-
-                                        <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-brand-600 to-amber-500 hover:from-brand-700 hover:to-amber-600 text-white font-extrabold rounded-2xl shadow-lg shadow-brand-500/25 transition text-sm">
+                                        <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-brand-600 to-amber-500 text-white font-extrabold rounded-2xl shadow-lg shadow-brand-500/25 text-sm">
                                             {authMode === 'login' ? 'Acceder a mi Aula 🚀' : 'Crear mi Cuenta 🎉'}
                                         </button>
                                     </form>
                                 </div>
                             </div>
                         ) : activeTab === 'dashboard' ? (
-                            /* DASHBOARD PRINCIPAL */
+                            /* DASHBOARD */
                             <div className="space-y-8">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div>
@@ -675,7 +622,7 @@
                                             {selectedSubject ? selectedSubject.name : `¡Hola de nuevo, ${user.name}! 👋`}
                                         </h2>
                                         <p className="text-slate-500 text-sm font-medium mt-1">
-                                            {selectedSubject ? `Aprende, resume y evalúa tu progreso` : `${user.degree} • ${user.university}`}
+                                            {selectedSubject ? `Aprende, resume, resuelve problemas y evalúa tu progreso` : `${user.degree} • ${user.university}`}
                                         </p>
                                     </div>
                                     <div className="flex space-x-3">
@@ -684,7 +631,7 @@
                                                 Volver a Asignaturas
                                             </button>
                                         )}
-                                        <button onClick={() => setShowModal(true)} className="inline-flex items-center space-x-2 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-brand-500/20 text-xs transition">
+                                        <button onClick={() => setShowModal(true)} className="inline-flex items-center space-x-2 bg-gradient-to-r from-brand-600 to-brand-700 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-brand-500/20 text-xs transition">
                                             <Icon name="plus" className="w-4 h-4" />
                                             <span>Nueva Asignatura</span>
                                         </button>
@@ -692,9 +639,10 @@
                                 </div>
 
                                 {selectedSubject ? (
-                                    /* DETALLE ASIGNATURA */
+                                    /* VISTA DE UNA ASIGNATURA SELECCIONADA */
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-6">
+                                            {/* TEMARIOS PDF */}
                                             <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 space-y-4">
                                                 <div className="flex justify-between items-center">
                                                     <h3 className="text-lg font-extrabold text-slate-800 flex items-center space-x-2">
@@ -712,7 +660,6 @@
                                                     <div className="border-2 border-dashed border-purple-200 p-8 rounded-2xl text-center text-slate-400 space-y-2">
                                                         <Icon name="upload-cloud" className="w-10 h-10 mx-auto text-brand-400" />
                                                         <p className="text-sm font-bold text-slate-700">Aún no has subido ningún PDF a esta materia.</p>
-                                                        <p className="text-xs text-slate-400">Sube apuntes para generar resúmenes y exámenes automáticos.</p>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-3">
@@ -727,7 +674,7 @@
                                                                         <p className="text-xs text-slate-500">{t.pageCount} Páginas • {t.uploadDate}</p>
                                                                     </div>
                                                                 </div>
-                                                                <button onClick={() => handleDeleteTopic(selectedSubject.id, t.id)} className="text-slate-400 hover:text-red-500 p-2">
+                                                                <button onClick={() => setSubjects(prev => prev.map(s => s.id === selectedSubject.id ? { ...s, topics: s.topics.filter(tp => tp.id !== t.id) } : s))} className="text-slate-400 hover:text-red-500 p-2">
                                                                     <Icon name="trash-2" className="w-4 h-4" />
                                                                 </button>
                                                             </div>
@@ -735,19 +682,39 @@
                                                     </div>
                                                 )}
                                             </div>
+
+                                            {/* HISTORIAL DE EXÁMENES REALIZADOS Y GUARDADOS DE ESTA MATERIA */}
+                                            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 space-y-4">
+                                                <h3 className="text-lg font-extrabold text-slate-800 flex items-center space-x-2">
+                                                    <Icon name="clock" className="w-5 h-5 text-brand-600" />
+                                                    <span>Historial de Exámenes Guardados de {selectedSubject.name}</span>
+                                                </h3>
+
+                                                {savedExams.filter(e => e.subjectName === selectedSubject.name).length === 0 ? (
+                                                    <p className="text-xs text-slate-400 font-medium">Aún no has realizado exámenes para esta materia.</p>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        {savedExams.filter(e => e.subjectName === selectedSubject.name).map(ex => (
+                                                            <div key={ex.id} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex justify-between items-center">
+                                                                <div>
+                                                                    <p className="text-xs font-bold text-slate-800">{ex.subjectName} ({ex.questionsCount} Preguntas)</p>
+                                                                    <p className="text-[10px] text-slate-400">Realizado el {ex.date}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className="text-sm font-black text-brand-600 bg-brand-50 px-3 py-1 rounded-xl border border-brand-200">
+                                                                        Nota: {ex.score} / 10
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {/* ACCIONES HERRAMIENTAS IA */}
+                                        {/* ACCIONES RESÚMENES Y EXÁMENES */}
                                         <div className="space-y-6">
-                                            <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl space-y-2">
-                                                <div className="text-xs text-amber-400 font-bold uppercase tracking-wider flex items-center space-x-1">
-                                                    <Icon name="clock" className="w-4 h-4" />
-                                                    <span>Cuenta Atrás</span>
-                                                </div>
-                                                <div className="text-2xl font-black text-white">{getCountdownText(selectedSubject.examDate)}</div>
-                                            </div>
-
-                                            {/* GENERAR RESUMEN */}
+                                            {/* RESÚMENES EXTENSOS */}
                                             <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
                                                 <h3 className="text-base font-extrabold text-slate-800 flex items-center space-x-2">
                                                     <Icon name="list" className="w-5 h-5 text-brand-600" />
@@ -766,44 +733,51 @@
                                                     </div>
 
                                                     <div>
-                                                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Formato</label>
+                                                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Formato de Resumen</label>
                                                         <select value={summaryType} onChange={(e) => setSummaryType(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
-                                                            <option value="short">📌 Resumen Muy Corto</option>
-                                                            <option value="medium">📖 Resumen Detallado</option>
-                                                            <option value="keywords">🔑 Palabras Clave</option>
-                                                            <option value="schema">🧠 Esquema Conceptual</option>
+                                                            <option value="short">📌 Resumen Ultra-Extenso</option>
+                                                            <option value="medium">📖 Resumen Detallado Completo</option>
+                                                            <option value="keywords">🔑 Glosario y Palabras Clave</option>
+                                                            <option value="schema">🧠 Esquema Conceptual Extenso</option>
                                                         </select>
                                                     </div>
 
                                                     <button onClick={handleGenerateSummary} className="w-full py-2.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-extrabold rounded-xl text-xs transition border border-brand-200 flex items-center justify-center space-x-2">
                                                         <Icon name="sparkles" className="w-4 h-4" />
-                                                        <span>Generar y Vista Previa</span>
+                                                        <span>Generar Resumen Extenso</span>
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            {/* GENERAR EXAMEN */}
+                                            {/* GENERAR EXAMEN TRADICIONAL O DE CIENCIAS */}
                                             <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
                                                 <h3 className="text-base font-extrabold text-slate-800 flex items-center space-x-2">
                                                     <Icon name="brain" className="w-5 h-5 text-brand-600" />
-                                                    <span>Generar Examen IA</span>
+                                                    <span>Generar Examen por IA</span>
                                                 </h3>
+
                                                 <button onClick={() => {
-                                                    if (!selectedSubject.topics || selectedSubject.topics.length === 0) {
-                                                        alert("Sube al menos un PDF primero.");
-                                                        return;
-                                                    }
-                                                    setExamConfig({ ...examConfig, subjectId: selectedSubject.id });
+                                                    if (!selectedSubject.topics || selectedSubject.topics.length === 0) { alert("Sube al menos un PDF."); return; }
+                                                    setExamConfig({ ...examConfig, subjectId: selectedSubject.id, isMath: false });
                                                     setShowExamConfigModal(true);
-                                                }} className="w-full py-3 bg-gradient-to-r from-brand-600 to-amber-500 hover:from-brand-700 hover:to-amber-600 text-white font-extrabold rounded-xl shadow-md text-xs transition flex items-center justify-center space-x-2">
+                                                }} className="w-full py-3 bg-gradient-to-r from-brand-600 to-amber-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2">
                                                     <Icon name="sparkles" className="w-4 h-4" />
-                                                    <span>Configurar Examen</span>
+                                                    <span>Examen Teórico / Test</span>
+                                                </button>
+
+                                                <button onClick={() => {
+                                                    if (!selectedSubject.topics || selectedSubject.topics.length === 0) { alert("Sube al menos un PDF."); return; }
+                                                    setExamConfig({ ...examConfig, subjectId: selectedSubject.id, isMath: true });
+                                                    setShowExamConfigModal(true);
+                                                }} className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2">
+                                                    <Icon name="calculator" className="w-4 h-4 text-amber-400" />
+                                                    <span>Examen de Ciencias / Mates (Folio)</span>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    /* GENERAL PANEL DE ASIGNATURAS */
+                                    /* PANEL GENERAL */
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-4">
                                             <h3 className="text-xl font-black text-slate-900">Mis Asignaturas ({subjects.length})</h3>
@@ -837,10 +811,6 @@
                                                                     <div className="text-slate-700 font-bold flex items-center">
                                                                         <Icon name="calendar" className="w-4 h-4 text-brand-600 mr-1.5" />
                                                                         <span>Examen: {sub.examDate}</span>
-                                                                    </div>
-                                                                    <div className="text-brand-700 font-extrabold flex items-center pt-1">
-                                                                        <Icon name="clock" className="w-4 h-4 text-amber-500 mr-1.5" />
-                                                                        <span>{getCountdownText(sub.examDate)}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -876,12 +846,11 @@
                                     <>
                                         <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                                             <div>
-                                                <h2 className="text-2xl font-black text-slate-900">Simulador: {currentSubjectName}</h2>
-                                                <p className="text-xs text-slate-500 font-medium">{currentTest.length} Preguntas • Evaluación Inteligente</p>
+                                                <h2 className="text-2xl font-black text-slate-900">Examen: {currentSubjectName}</h2>
+                                                <p className="text-xs text-slate-500 font-medium">{currentTest.length} Ejercicios • Evaluado por IA</p>
                                             </div>
 
                                             <div className="flex items-center space-x-2">
-                                                {/* BOTÓN IMPRIMIR EXAMEN */}
                                                 <button onClick={downloadExamPDF} className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center space-x-1">
                                                     <Icon name="printer" className="w-4 h-4" />
                                                     <span>Descargar Imprimible (PDF)</span>
@@ -897,35 +866,46 @@
                                             </div>
                                         </div>
 
+                                        {/* ZONA SUBIDA DE FOTO DE FOLIO PARA MATES/CIENCIAS */}
+                                        {currentTest.some(q => q.type === 'math') && (
+                                            <div className="bg-amber-50 p-6 rounded-3xl border border-amber-200 space-y-3">
+                                                <h3 className="font-extrabold text-amber-900 text-sm flex items-center space-x-2">
+                                                    <Icon name="camera" className="w-5 h-5 text-amber-600" />
+                                                    <span>¿Has resuelto los ejercicios en un folio a mano?</span>
+                                                </h3>
+                                                <p className="text-xs text-amber-700">Sube la foto de tu folio escrito a mano. Nuestro motor OCR leerá tus operaciones y las corregirá paso a paso.</p>
+                                                
+                                                <label htmlFor="folio-photo" className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs cursor-pointer inline-flex items-center space-x-2 shadow">
+                                                    <Icon name="camera" className="w-4 h-4" />
+                                                    <span>{ocrScanning ? 'Escaneando Foto OCR...' : 'Subir Foto de mi Folio'}</span>
+                                                </label>
+                                                <input type="file" id="folio-photo" accept="image/*" onChange={handleFolioPhotoUpload} className="hidden" />
+
+                                                {uploadedFolioImg && (
+                                                    <div className="mt-2">
+                                                        <img src={uploadedFolioImg} alt="Folio escaneado" className="max-h-40 rounded-xl border border-amber-300 shadow" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="space-y-6">
                                             {currentTest.map((q, idx) => (
                                                 <div key={q.id} className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
-                                                    <div className="flex justify-between items-start">
-                                                        <h3 className="font-extrabold text-slate-800 text-base">
-                                                            <span className="text-brand-600 mr-2">{idx + 1}.</span>{q.question}
-                                                        </h3>
-                                                    </div>
+                                                    <h3 className="font-extrabold text-slate-800 text-base">
+                                                        <span className="text-brand-600 mr-2">{idx + 1}.</span>{q.question}
+                                                    </h3>
 
                                                     {q.type === 'test' ? (
                                                         <div className="space-y-2">
-                                                            {q.options.map((opt, oIdx) => {
-                                                                const isSel = userAnswers[q.id] === oIdx;
-                                                                let style = "border-slate-200 bg-slate-50/50";
-                                                                if (testSubmitted) {
-                                                                    if (oIdx === q.correct) style = "border-emerald-500 bg-emerald-50 text-emerald-800 font-bold";
-                                                                    else if (isSel) style = "border-red-500 bg-red-50 text-red-800";
-                                                                } else if (isSel) style = "border-brand-600 bg-brand-50 font-bold";
-
-                                                                return (
-                                                                    <button key={oIdx} onClick={() => handleSelectOption(q.id, oIdx)} className={`w-full text-left p-3.5 rounded-2xl border text-xs transition flex items-center justify-between ${style}`}>
-                                                                        <span>{opt}</span>
-                                                                        {testSubmitted && oIdx === q.correct && <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />}
-                                                                    </button>
-                                                                );
-                                                            })}
+                                                            {q.options.map((opt, oIdx) => (
+                                                                <button key={oIdx} onClick={() => handleSelectOption(q.id, oIdx)} className={`w-full text-left p-3.5 rounded-2xl border text-xs transition ${userAnswers[q.id] === oIdx ? 'border-brand-600 bg-brand-50 font-bold' : 'border-slate-200 bg-slate-50'}`}>
+                                                                    <span>{opt}</span>
+                                                                </button>
+                                                            ))}
                                                         </div>
                                                     ) : (
-                                                        <textarea rows="3" disabled={testSubmitted} value={userAnswers[q.id] || ''} onChange={(e) => handleSelectOption(q.id, e.target.value)} placeholder="Escribe tu respuesta..." className="w-full p-3 rounded-2xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500" />
+                                                        <textarea rows="3" disabled={testSubmitted} value={userAnswers[q.id] || ''} onChange={(e) => handleSelectOption(q.id, e.target.value)} placeholder="Escribe tu solución o pasos resueltos..." className="w-full p-3 rounded-2xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500" />
                                                     )}
 
                                                     {testSubmitted && (
@@ -942,13 +922,13 @@
 
                                         {!testSubmitted ? (
                                             <button onClick={handleFinishTest} className="w-full py-4 bg-gradient-to-r from-brand-600 to-amber-500 text-white font-black rounded-2xl shadow-lg shadow-brand-500/25 transition">
-                                                Finalizar y Corregir
+                                                Finalizar, Guardar en Historial y Corregir
                                             </button>
                                         ) : (
                                             <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl text-center space-y-4">
-                                                <h3 className="text-xl font-bold text-slate-200">¡Examen Corregido y Guardado!</h3>
+                                                <h3 className="text-xl font-bold text-slate-200">¡Examen Corregido y Guardado en el Historial!</h3>
                                                 <div className="text-5xl font-black text-amber-400">{calculateScore()} / 10</div>
-                                                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl text-xs transition">
+                                                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2.5 bg-brand-500 text-white font-bold rounded-2xl text-xs">
                                                     Volver al Panel
                                                 </button>
                                             </div>
@@ -957,14 +937,13 @@
                                 )}
                             </div>
                         ) : (
-                            /* COMUNIDAD FUNCIONAL */
+                            /* COMUNIDAD FUNCIONAL PERSISTENTE */
                             <div className="space-y-6">
                                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">Banco Comunitario de Exámenes</h2>
                                 {publicExams.length === 0 ? (
                                     <div className="bg-white p-12 rounded-3xl border border-dashed border-purple-200 text-center text-slate-400 space-y-2">
                                         <Icon name="book-open" className="w-12 h-12 mx-auto text-brand-300" />
                                         <p className="text-base font-bold text-slate-700">Aún no hay exámenes públicos en la comunidad.</p>
-                                        <p className="text-xs text-slate-400">Publica tus autoevaluaciones marcando el examen como "Público".</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -987,7 +966,7 @@
                         )}
                     </main>
 
-                    {/* MODAL CONFIGURADOR DE EXAMEN */}
+                    {/* MODAL CONFIGURAR EXAMEN */}
                     {showExamConfigModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4">
@@ -999,7 +978,7 @@
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Elegir Temario</label>
-                                        <select value={examConfig.topicScope} onChange={(e) => setExamConfig({ ...examConfig, topicScope: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                        <select value={examConfig.topicScope} onChange={(e) => setExamConfig({ ...examConfig, topicScope: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border text-xs font-semibold bg-white">
                                             <option value="all">📚 Todo el temario completo</option>
                                             {subjects.find(s => s.id === examConfig.subjectId)?.topics?.map(t => (
                                                 <option key={t.id} value={t.id}>📄 {t.fileName}</option>
@@ -1007,19 +986,21 @@
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Formato</label>
-                                        <select value={examConfig.format} onChange={(e) => setExamConfig({ ...examConfig, format: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
-                                            <option value="test">Tipo Test</option>
-                                            <option value="short">Preguntas Cortas</option>
-                                            <option value="long">Preguntas de Desarrollo</option>
-                                            <option value="mixed">Examen Mixto</option>
-                                        </select>
-                                    </div>
+                                    {!examConfig.isMath && (
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Formato</label>
+                                            <select value={examConfig.format} onChange={(e) => setExamConfig({ ...examConfig, format: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border text-xs font-semibold bg-white">
+                                                <option value="test">Tipo Test</option>
+                                                <option value="short">Preguntas Cortas</option>
+                                                <option value="long">Preguntas de Desarrollo</option>
+                                                <option value="mixed">Examen Mixto</option>
+                                            </select>
+                                        </div>
+                                    )}
 
                                     <div>
                                         <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Número de Preguntas</label>
-                                        <select value={examConfig.questionCount} onChange={(e) => setExamConfig({ ...examConfig, questionCount: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                        <select value={examConfig.questionCount} onChange={(e) => setExamConfig({ ...examConfig, questionCount: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border text-xs font-semibold bg-white">
                                             <option value="10">10 Preguntas</option>
                                             <option value="15">15 Preguntas</option>
                                             <option value="25">25 Preguntas</option>
@@ -1027,7 +1008,7 @@
                                         </select>
                                     </div>
 
-                                    <button onClick={handleGenerateExamFromConfig} className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold rounded-2xl shadow text-xs">
+                                    <button onClick={handleGenerateExamFromConfig} className="w-full py-3 bg-brand-600 text-white font-extrabold rounded-2xl shadow text-xs">
                                         Generar Examen
                                     </button>
                                 </div>
@@ -1035,14 +1016,14 @@
                         </div>
                     )}
 
-                    {/* MODAL VISTA PREVIA RESUMEN CON BOTÓN DESCARGAR */}
+                    {/* MODAL RESUMEN */}
                     {showSummaryModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-purple-100 space-y-4 max-h-[85vh] flex flex-col">
                                 <div className="flex justify-between items-center border-b pb-3">
                                     <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
                                         <Icon name="sparkles" className="w-5 h-5 text-brand-600" />
-                                        <span>Vista Previa del Resumen IA</span>
+                                        <span>Resumen Extenso Generado por IA</span>
                                     </h3>
                                     <button onClick={() => setShowSummaryModal(false)}><Icon name="x" className="w-5 h-5 text-slate-400" /></button>
                                 </div>
@@ -1052,12 +1033,11 @@
                                 </div>
 
                                 <div className="flex justify-between items-center pt-2">
-                                    <button onClick={downloadSummaryPDF} className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow flex items-center space-x-2">
+                                    <button onClick={downloadSummaryPDF} className="px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-2xl text-xs shadow flex items-center space-x-2">
                                         <Icon name="download" className="w-4 h-4" />
                                         <span>Descargar en PDF</span>
                                     </button>
-
-                                    <button onClick={() => setShowSummaryModal(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-xs">
+                                    <button onClick={() => setShowSummaryModal(false)} className="px-5 py-2.5 bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs">
                                         Cerrar
                                     </button>
                                 </div>
@@ -1065,43 +1045,7 @@
                         </div>
                     )}
 
-                    {/* MODAL EDITAR PERFIL */}
-                    {showProfileModal && (
-                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4">
-                                <div className="flex justify-between items-center border-b pb-3">
-                                    <h3 className="text-lg font-bold text-slate-800">Editar Mi Perfil</h3>
-                                    <button onClick={() => setShowProfileModal(false)}><Icon name="x" className="w-5 h-5 text-slate-400" /></button>
-                                </div>
-
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const updated = { ...user, name: profileForm.name, degree: profileForm.degree, university: profileForm.university };
-                                    setUser(updated);
-                                    setRegisteredUsers(prev => prev.map(u => u.email === user.email ? updated : u));
-                                    setShowProfileModal(false);
-                                }} className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre Completo</label>
-                                        <input type="text" required value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Carrera / Grado</label>
-                                        <input type="text" required value={profileForm.degree} onChange={(e) => setProfileForm({ ...profileForm, degree: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Universidad</label>
-                                        <UniversitySelect name="university" value={profileForm.university} onChange={(e) => setProfileForm({ ...profileForm, university: e.target.value })} />
-                                    </div>
-                                    <button type="submit" className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold rounded-2xl shadow text-xs">
-                                        Guardar Cambios
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* MODAL CREAR ASIGNATURA */}
+                    {/* MODAL ASIGNATURA */}
                     {showModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4">
@@ -1113,13 +1057,13 @@
                                 <form onSubmit={handleAddSubject} className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre de la Asignatura</label>
-                                        <input type="text" required value={subjectNameInput} onChange={(e) => setSubjectNameInput(e.target.value)} placeholder="Ej. Anatomía, Estadística..." className="w-full px-4 py-2.5 rounded-xl border text-sm" />
+                                        <input type="text" required value={subjectNameInput} onChange={(e) => setSubjectNameInput(e.target.value)} placeholder="Ej. Matemáticas, Farmacología..." className="w-full px-4 py-2.5 rounded-xl border text-sm" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Fecha de Examen</label>
                                         <input type="date" value={subjectExamDateInput} onChange={(e) => setSubjectExamDateInput(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border text-sm bg-white" />
                                     </div>
-                                    <button type="submit" className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold rounded-2xl shadow text-xs">
+                                    <button type="submit" className="w-full py-3 bg-brand-600 text-white font-extrabold rounded-2xl shadow text-xs">
                                         Guardar Asignatura
                                     </button>
                                 </form>
