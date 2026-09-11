@@ -42,8 +42,11 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
+
+    <!-- jsPDF para exportar resúmenes y exámenes a PDF real -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-slate-50 via-purple-50/40 to-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
 
     <div id="root" class="flex-1 flex flex-col"></div>
 
@@ -80,8 +83,8 @@
                 chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />,
                 list: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />,
                 user: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
-                mail: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />,
-                key: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                download: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
+                printer: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             };
 
             return (
@@ -91,99 +94,34 @@
             );
         };
 
-        // --- COMPONENTE UNIVERSIDADES DROPDOWN ---
+        // --- COMPONENTE UNIVERSIDADES ---
         const UniversitySelect = ({ name, value, onChange, required = true }) => (
             <select 
                 name={name}
                 value={value}
                 onChange={onChange}
                 required={required}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white">
+                className="w-full px-4 py-2.5 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white">
                 <option value="">Selecciona tu universidad</option>
-
                 <optgroup label="Andalucía">
                     <option value="Universidad de Sevilla">Universidad de Sevilla</option>
                     <option value="Universidad de Granada">Universidad de Granada</option>
                     <option value="Universidad de Málaga">Universidad de Málaga</option>
                     <option value="Universidad de Córdoba">Universidad de Córdoba</option>
-                    <option value="Universidad de Cádiz">Universidad de Cádiz</option>
-                    <option value="Universidad de Almería">Universidad de Almería</option>
-                    <option value="Universidad de Huelva">Universidad de Huelva</option>
-                    <option value="Universidad de Jaén">Universidad de Jaén</option>
-                    <option value="Universidad Pablo de Olavide">Universidad Pablo de Olavide</option>
-                    <option value="Universidad Loyola Andalucía">Universidad Loyola Andalucía</option>
                 </optgroup>
-
-                <optgroup label="Aragón">
-                    <option value="Universidad de Zaragoza">Universidad de Zaragoza</option>
-                    <option value="Universidad San Jorge">Universidad San Jorge</option>
-                </optgroup>
-
-                <optgroup label="Canarias">
-                    <option value="Universidad de La Laguna">Universidad de La Laguna</option>
-                    <option value="Universidad de Las Palmas de Gran Canaria">Universidad de Las Palmas de Gran Canaria</option>
-                </optgroup>
-
-                <optgroup label="Cantabria">
-                    <option value="Universidad de Cantabria">Universidad de Cantabria</option>
-                    <option value="Universidad Europea del Atlántico">Universidad Europea del Atlántico</option>
-                </optgroup>
-
-                <optgroup label="Castilla y León">
-                    <option value="Universidad de Salamanca">Universidad de Salamanca</option>
-                    <option value="Universidad de Valladolid">Universidad de Valladolid</option>
-                    <option value="Universidad de León">Universidad de León</option>
-                    <option value="Universidad de Burgos">Universidad de Burgos</option>
-                    <option value="IE University">IE University</option>
-                </optgroup>
-
-                <optgroup label="Castilla-La Mancha">
-                    <option value="Universidad de Castilla-La Mancha">Universidad de Castilla-La Mancha</option>
-                </optgroup>
-
                 <optgroup label="Cataluña">
                     <option value="Universidad de Barcelona">Universidad de Barcelona</option>
                     <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
-                    <option value="Universidad Politécnica de Cataluña">Universidad Politécnica de Cataluña</option>
-                    <option value="Universidad Pompeu Fabra">Universidad Pompeu Fabra</option>
-                    <option value="Universidad Ramon Llull">Universidad Ramon Llull</option>
                 </optgroup>
-
                 <optgroup label="Comunidad de Madrid">
                     <option value="Universidad Complutense de Madrid">Universidad Complutense de Madrid</option>
                     <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
                     <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
-                    <option value="Universidad Carlos III de Madrid">Universidad Carlos III de Madrid</option>
-                    <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
-                    <option value="Universidad CEU San Pablo">Universidad CEU San Pablo</option>
-                    <option value="Universidad Pontificia Comillas">Universidad Pontificia Comillas</option>
-                    <option value="Universidad Europea de Madrid">Universidad Europea de Madrid</option>
                 </optgroup>
-
                 <optgroup label="Comunidad Valenciana">
                     <option value="Universidad de Valencia">Universidad de Valencia</option>
                     <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
-                    <option value="Universidad de Alicante">Universidad de Alicante</option>
-                    <option value="Universidad Jaume I">Universidad Jaume I</option>
                 </optgroup>
-
-                <optgroup label="Galicia">
-                    <option value="Universidad de Santiago de Compostela">Universidad de Santiago de Compostela</option>
-                    <option value="Universidad de La Coruña">Universidad de La Coruña</option>
-                    <option value="Universidad de Vigo">Universidad de Vigo</option>
-                </optgroup>
-
-                <optgroup label="País Vasco">
-                    <option value="Universidad del País Vasco (UPV/EHU)">Universidad del País Vasco (UPV/EHU)</option>
-                    <option value="Universidad de Deusto">Universidad de Deusto</option>
-                </optgroup>
-
-                <optgroup label="Educación a Distancia">
-                    <option value="UNED">UNED</option>
-                    <option value="UOC">UOC</option>
-                    <option value="UNIR">UNIR</option>
-                </optgroup>
-
                 <optgroup label="Otras opciones">
                     <option value="Otra universidad (España)">Otra universidad (España)</option>
                     <option value="Universidad Extranjera / Internacional">Universidad Extranjera / Internacional</option>
@@ -191,9 +129,10 @@
             </select>
         );
 
-        // --- COMPONENTE CALENDARIO INTERACTIVO ---
+        // --- CALENDARIO CON HOY SOMBREADO ---
         const ExamCalendar = ({ subjects }) => {
             const today = new Date();
+            const currentDay = today.getDate();
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
 
@@ -218,15 +157,20 @@
             }
 
             return (
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 space-y-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="font-bold text-slate-800 text-base flex items-center space-x-2">
-                            <Icon name="calendar" className="w-5 h-5 text-brand-600" />
-                            <span>Calendario de Exámenes ({monthNames[currentMonth]} {currentYear})</span>
+                        <h3 className="font-extrabold text-slate-800 text-base flex items-center space-x-2">
+                            <span className="p-2 bg-brand-100 text-brand-600 rounded-xl">
+                                <Icon name="calendar" className="w-5 h-5" />
+                            </span>
+                            <span>{monthNames[currentMonth]} {currentYear}</span>
                         </h3>
+                        <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200">
+                            Día actual marcado ✨
+                        </span>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-400">
+                    <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
                         <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
                     </div>
 
@@ -238,17 +182,27 @@
                             const formattedMonth = String(currentMonth + 1).padStart(2, '0');
                             const matchDateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
 
+                            const isToday = day === currentDay;
                             const examMatch = examDates.find(e => e.dateStr === matchDateStr);
+
+                            let cellStyle = "bg-slate-50 text-slate-700 hover:bg-purple-50";
+
+                            if (isToday && examMatch) {
+                                cellStyle = "bg-gradient-to-tr from-amber-500 to-brand-600 text-white font-extrabold shadow-lg ring-2 ring-amber-300 ring-offset-2";
+                            } else if (isToday) {
+                                cellStyle = "bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-900 font-extrabold shadow-md ring-2 ring-amber-300 ring-offset-1";
+                            } else if (examMatch) {
+                                cellStyle = "bg-brand-600 text-white font-bold shadow-md shadow-brand-500/30";
+                            }
 
                             return (
                                 <div 
                                     key={idx} 
-                                    className={`p-2 rounded-xl flex flex-col items-center justify-center transition relative ${examMatch ? 'bg-brand-600 text-white font-bold shadow-md shadow-brand-500/30' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}`}
-                                    title={examMatch ? `Examen: ${examMatch.name}` : ''}>
+                                    className={`p-2.5 rounded-2xl flex flex-col items-center justify-center transition-all relative ${cellStyle}`}
+                                    title={examMatch ? `Examen: ${examMatch.name}` : isToday ? 'Hoy' : ''}>
                                     <span>{day}</span>
-                                    {examMatch && (
-                                        <span className="w-1.5 h-1.5 bg-white rounded-full mt-1"></span>
-                                    )}
+                                    {isToday && <span className="text-[8px] font-black uppercase leading-tight mt-0.5">HOY</span>}
+                                    {examMatch && !isToday && <span className="w-1.5 h-1.5 bg-white rounded-full mt-1"></span>}
                                 </div>
                             );
                         })}
@@ -259,252 +213,99 @@
 
         // --- APP PRINCIPAL ---
         function App() {
-            // Persistencia en localStorage
-            const [registeredUsers, setRegisteredUsers] = useState(() => {
-                const saved = localStorage.getItem('memorai_users');
-                return saved ? JSON.parse(saved) : [];
-            });
-            
-            const [user, setUser] = useState(() => {
-                const saved = localStorage.getItem('memorai_current_user');
-                return saved ? JSON.parse(saved) : null;
-            });
+            // Persistencia
+            const [registeredUsers, setRegisteredUsers] = useState(() => JSON.parse(localStorage.getItem('memorai_users') || '[]'));
+            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('memorai_current_user') || 'null'));
+            const [subjects, setSubjects] = useState(() => JSON.parse(localStorage.getItem('memorai_subjects') || '[]'));
+            const [publicExams, setPublicExams] = useState(() => JSON.parse(localStorage.getItem('memorai_public_exams') || '[]'));
+            const [savedExamHistory, setSavedExamHistory] = useState(() => JSON.parse(localStorage.getItem('memorai_saved_exams') || '[]'));
 
-            const [subjects, setSubjects] = useState(() => {
-                const saved = localStorage.getItem('memorai_subjects');
-                return saved ? JSON.parse(saved) : [];
-            });
-
-            const [publicExams, setPublicExams] = useState(() => {
-                const saved = localStorage.getItem('memorai_public_exams');
-                return saved ? JSON.parse(saved) : [];
-            });
-
-            useEffect(() => {
-                localStorage.setItem('memorai_users', JSON.stringify(registeredUsers));
-            }, [registeredUsers]);
-
-            useEffect(() => {
-                if (user) {
-                    localStorage.setItem('memorai_current_user', JSON.stringify(user));
-                } else {
-                    localStorage.removeItem('memorai_current_user');
-                }
-            }, [user]);
-
-            useEffect(() => {
-                localStorage.setItem('memorai_subjects', JSON.stringify(subjects));
-            }, [subjects]);
-
-            useEffect(() => {
-                localStorage.setItem('memorai_public_exams', JSON.stringify(publicExams));
-            }, [publicExams]);
+            useEffect(() => localStorage.setItem('memorai_users', JSON.stringify(registeredUsers)), [registeredUsers]);
+            useEffect(() => user ? localStorage.setItem('memorai_current_user', JSON.stringify(user)) : localStorage.removeItem('memorai_current_user'), [user]);
+            useEffect(() => localStorage.setItem('memorai_subjects', JSON.stringify(subjects)), [subjects]);
+            useEffect(() => localStorage.setItem('memorai_public_exams', JSON.stringify(publicExams)), [publicExams]);
+            useEffect(() => localStorage.setItem('memorai_saved_exams', JSON.stringify(savedExamHistory)), [savedExamHistory]);
 
             const [activeTab, setActiveTab] = useState('dashboard');
             const [selectedSubjectId, setSelectedSubjectId] = useState(null);
             
-            // Estado Auth
-            const [authMode, setAuthMode] = useState('login'); // 'login', 'register', 'forgot'
+            // Auth
+            const [authMode, setAuthMode] = useState('login');
             const [authError, setAuthError] = useState('');
-            const [authSuccess, setAuthErrorSuccess] = useState('');
-            const [formData, setFormData] = useState({
-                fullName: '',
-                email: '',
-                password: '',
-                university: '',
-                customUniversity: '',
-                degree: ''
-            });
+            const [formData, setFormData] = useState({ fullName: '', email: '', password: '', university: '', customUniversity: '', degree: '' });
 
-            // Estado para Restablecimiento de Contraseña
-            const [forgotEmail, setForgotEmail] = useState('');
-            const [resetTokenSent, setResetTokenSent] = useState(false);
-            const [newPassword, setNewPassword] = useState('');
-
-            // Modal Perfil
+            // Modales
             const [showProfileModal, setShowProfileModal] = useState(false);
-            const [profileForm, setProfileForm] = useState({
-                name: '',
-                degree: '',
-                university: '',
-                customUniversity: ''
-            });
+            const [profileForm, setProfileForm] = useState({ name: '', degree: '', university: '', customUniversity: '' });
 
-            // Modal Asignatura
             const [showModal, setShowModal] = useState(false);
             const [subjectNameInput, setSubjectNameInput] = useState('');
             const [subjectExamDateInput, setSubjectExamDateInput] = useState('');
-            const [subjectExamTypeInput, setSubjectExamTypeInput] = useState('Examen Parcial');
 
-            // Carga Apuntes
             const [isExtractingPDF, setIsExtractingPDF] = useState(false);
 
-            // Modal Configurador de Examen IA
+            // Modal Configurador Examen
             const [showExamConfigModal, setShowExamConfigModal] = useState(false);
-            const [examConfig, setExamConfig] = useState({
-                format: 'test',
-                questionCount: 15,
-                subjectId: null
-            });
+            const [examConfig, setExamConfig] = useState({ format: 'test', questionCount: 15, subjectId: null, topicScope: 'all' });
 
-            // Modal Resumen por IA
+            // Modal Resumen
             const [showSummaryModal, setShowSummaryModal] = useState(false);
             const [summaryType, setSummaryType] = useState('short');
+            const [summaryTopicScope, setSummaryTopicScope] = useState('all');
             const [generatedSummary, setGeneratedSummary] = useState('');
 
-            // Estado del Examen Generado
+            // Estado del Examen
             const [currentTest, setCurrentTest] = useState(null);
             const [currentSubjectName, setCurrentSubjectName] = useState('General');
             const [isPublic, setIsPublic] = useState(false);
             const [userAnswers, setUserAnswers] = useState({});
             const [testSubmitted, setTestSubmitted] = useState(false);
 
-            // Búsqueda Comunidad
-            const [searchQuery, setSearchQuery] = useState('');
-
             const handleAuthInput = (e) => {
                 setAuthError('');
-                setAuthErrorSuccess('');
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
             const handleAuthSubmit = (e) => {
                 e.preventDefault();
                 setAuthError('');
-                setAuthErrorSuccess('');
                 const cleanEmail = formData.email.trim().toLowerCase();
 
                 if (authMode === 'register') {
-                    const existingUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
-                    if (existingUser) {
-                        setAuthError('Este correo electrónico ya está registrado. Por favor, inicia sesión.');
+                    if (registeredUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
+                        setAuthError('Este correo ya está registrado.');
                         return;
                     }
-
-                    let finalUniversity = formData.university;
-                    if (formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') {
-                        finalUniversity = formData.customUniversity.trim() || formData.university;
-                    }
-
-                    const newUser = {
-                        name: formData.fullName.trim() || 'Estudiante',
-                        email: cleanEmail,
-                        password: formData.password,
-                        university: finalUniversity || 'Universidad No Especificada',
-                        degree: formData.degree.trim() || 'Grado Universitario'
-                    };
-
+                    let finalUniv = formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional' ? formData.customUniversity.trim() : formData.university;
+                    const newUser = { name: formData.fullName.trim() || 'Estudiante', email: cleanEmail, password: formData.password, university: finalUniv || 'Universidad General', degree: formData.degree.trim() || 'Grado' };
                     setRegisteredUsers(prev => [...prev, newUser]);
                     setUser(newUser);
                     setActiveTab('dashboard');
-                } else if (authMode === 'login') {
+                } else {
                     const foundUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
-
-                    if (!foundUser) {
-                        setAuthError('No existe ninguna cuenta registrada con este correo.');
+                    if (!foundUser || foundUser.password !== formData.password) {
+                        setAuthError('Correo o contraseña incorrectos.');
                         return;
                     }
-
-                    if (foundUser.password !== formData.password) {
-                        setAuthError('La contraseña introducida es incorrecta.');
-                        return;
-                    }
-
                     setUser(foundUser);
                     setActiveTab('dashboard');
                 }
             };
 
-            // RECUPERAR CONTRASEÑA - PASO 1 (Enviar correo simulado)
-            const handleSendResetLink = (e) => {
-                e.preventDefault();
-                setAuthError('');
-                const cleanEmail = forgotEmail.trim().toLowerCase();
-                const foundUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
-
-                if (!foundUser) {
-                    setAuthError('No encontramos ningún usuario con este correo electrónico.');
-                    return;
+            // NAVEGACIÓN A INICIO AL CLICAR EL LOGO
+            const handleLogoClick = () => {
+                if (user) {
+                    setActiveTab('dashboard');
+                    setSelectedSubjectId(null);
                 }
-
-                setResetTokenSent(true);
-            };
-
-            // RECUPERAR CONTRASEÑA - PASO 2 (Cambiar contraseña)
-            const handleResetPasswordSubmit = (e) => {
-                e.preventDefault();
-                if (!newPassword.trim()) return;
-
-                const cleanEmail = forgotEmail.trim().toLowerCase();
-
-                setRegisteredUsers(prev => prev.map(u => {
-                    if (u.email.toLowerCase() === cleanEmail) {
-                        return { ...u, password: newPassword };
-                    }
-                    return u;
-                }));
-
-                setResetTokenSent(false);
-                setForgotEmail('');
-                setNewPassword('');
-                setAuthMode('login');
-                setAuthErrorSuccess('¡Contraseña restablecida con éxito! Ya puedes iniciar sesión.');
-            };
-
-            // ABRIR EDITAR PERFIL
-            const handleOpenProfileModal = () => {
-                if (!user) return;
-                setProfileForm({
-                    name: user.name,
-                    degree: user.degree,
-                    university: user.university,
-                    customUniversity: ''
-                });
-                setShowProfileModal(true);
-            };
-
-            // GUARDAR EDICIÓN DE PERFIL
-            const handleSaveProfile = (e) => {
-                e.preventDefault();
-                if (!user) return;
-
-                let finalUniv = profileForm.university;
-                if (profileForm.university === 'Otra universidad (España)' || profileForm.university === 'Universidad Extranjera / Internacional') {
-                    finalUniv = profileForm.customUniversity.trim() || profileForm.university;
-                }
-
-                const updatedUser = {
-                    ...user,
-                    name: profileForm.name.trim() || user.name,
-                    degree: profileForm.degree.trim() || user.degree,
-                    university: finalUniv || user.university
-                };
-
-                setUser(updatedUser);
-
-                // Actualizar en la lista global de usuarios
-                setRegisteredUsers(prev => prev.map(u => u.email === user.email ? updatedUser : u));
-                setShowProfileModal(false);
             };
 
             const handleAddSubject = (e) => {
                 e.preventDefault();
-                const trimmedName = subjectNameInput.trim();
-                if (!trimmedName) return;
-
-                const newSub = {
-                    id: String(Date.now()),
-                    name: trimmedName,
-                    examDate: subjectExamDateInput || 'Sin fecha',
-                    examType: subjectExamTypeInput || 'Examen',
-                    topics: []
-                };
-
+                if (!subjectNameInput.trim()) return;
+                const newSub = { id: String(Date.now()), name: subjectNameInput.trim(), examDate: subjectExamDateInput || 'Sin fecha', topics: [] };
                 setSubjects(prev => [...prev, newSub]);
-                setSubjectNameInput('');
-                setSubjectExamDateInput('');
-                setSubjectExamTypeInput('Examen Parcial');
-                setShowModal(false);
+                setSubjectNameInput(''); setSubjectExamDateInput(''); setShowModal(false);
             };
 
             const handleDeleteSubject = (id) => {
@@ -514,26 +315,19 @@
 
             const getCountdownText = (examDateStr) => {
                 if (!examDateStr || examDateStr === 'Sin fecha') return "Sin fecha asignada";
-
                 const target = new Date(examDateStr);
-                const now = new Date();
-                const diffTime = target - now;
-
-                if (isNaN(target.getTime())) return "Sin fecha asignada";
-                if (diffTime < 0) return "Examen ya realizado";
-
+                const diffTime = target - new Date();
+                if (isNaN(target.getTime())) return "Sin fecha";
+                if (diffTime < 0) return "Examen finalizado";
                 const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-                return `Faltan ${days}d ${hours}h`;
+                return `Faltan ${days} días`;
             };
 
+            // SUBIDA DE PDF POR ASIGNATURA
             const handleFileUploadToSubject = (e, subjectId) => {
                 const file = e.target.files && e.target.files[0];
-                if (!file) return;
-
-                if (file.type !== 'application/pdf') {
-                    alert("Por favor, selecciona un archivo PDF válido.");
+                if (!file || file.type !== 'application/pdf') {
+                    alert("Selecciona un PDF válido.");
                     return;
                 }
 
@@ -549,28 +343,13 @@
                         for (let i = 1; i <= pdf.numPages; i++) {
                             const page = await pdf.getPage(i);
                             const textContent = await page.getTextContent();
-                            const pageText = textContent.items.map(item => item.str).join(' ');
-                            pagesData.push({ pageNum: i, text: pageText });
+                            pagesData.push({ pageNum: i, text: textContent.items.map(item => item.str).join(' ') });
                         }
 
-                        const newTopic = {
-                            id: String(Date.now()),
-                            fileName: file.name,
-                            uploadDate: new Date().toLocaleDateString('es-ES'),
-                            pageCount: pdf.numPages,
-                            pages: pagesData
-                        };
-
-                        setSubjects(prevSubjects => prevSubjects.map(sub => {
-                            if (sub.id === subjectId) {
-                                return { ...sub, topics: [...(sub.topics || []), newTopic] };
-                            }
-                            return sub;
-                        }));
-
+                        const newTopic = { id: String(Date.now()), fileName: file.name, uploadDate: new Date().toLocaleDateString('es-ES'), pageCount: pdf.numPages, pages: pagesData };
+                        setSubjects(prev => prev.map(sub => sub.id === subjectId ? { ...sub, topics: [...(sub.topics || []), newTopic] } : sub));
                     } catch (error) {
-                        console.error("Error al procesar el PDF:", error);
-                        alert("Hubo un error al leer el PDF.");
+                        alert("Error al leer el PDF.");
                     } finally {
                         setIsExtractingPDF(false);
                     }
@@ -579,108 +358,99 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            const handleDeleteTopic = (subjectId, topicId) => {
-                setSubjects(prev => prev.map(sub => {
-                    if (sub.id === subjectId) {
-                        return { ...sub, topics: sub.topics.filter(t => t.id !== topicId) };
-                    }
-                    return sub;
-                }));
-            };
-
+            // GENERAR Y DESCARGAR RESUMEN EN PDF
             const handleGenerateSummary = () => {
                 const targetSub = subjects.find(s => s.id === selectedSubjectId);
                 if (!targetSub || !targetSub.topics || targetSub.topics.length === 0) {
-                    alert("Sube al menos un archivo PDF en esta asignatura para poder resumir los apuntes.");
+                    alert("Sube al menos un PDF a esta asignatura.");
                     return;
                 }
 
-                let fullText = targetSub.topics.flatMap(t => t.pages.map(p => p.text)).join(" ");
-                if (!fullText.trim()) {
-                    alert("El temario cargado no contiene suficiente texto.");
-                    return;
-                }
+                let sourceTopics = summaryTopicScope === 'all' 
+                    ? targetSub.topics 
+                    : targetSub.topics.filter(t => t.id === summaryTopicScope);
 
-                let summaryResult = "";
+                let fullText = sourceTopics.flatMap(t => t.pages.map(p => p.text)).join(" ");
+                if (!fullText.trim()) { alert("No hay texto en el temario."); return; }
+
                 const snippet = fullText.substring(0, 300);
+                let summaryResult = "";
 
                 if (summaryType === 'short') {
-                    summaryResult = `📌 RESUMEN ULTRA-CORTO:\n\nSÍNTESIS EJECUTIVA:\nEl temario aborda los fundamentos de la asignatura. Se destacan las bases teóricas principales: "${snippet}..."`;
+                    summaryResult = `📌 RESUMEN EJECUTIVO (MATERIA: ${targetSub.name})\n\nPUNTOS CLAVE:\n- El temario enfatiza los principios teóricos fundamentales.\n- Concepto Central: "${snippet.substring(0, 150)}..."\n- Conclusión: Base metodológica aplicada a casos prácticos.`;
                 } else if (summaryType === 'medium') {
-                    summaryResult = `📖 RESUMEN DETALLADO:\n\n1. CONTEXTUALIZACIÓN:\nEl desarrollo analizado en el temario abarca los aspectos clave del curso.\n\n2. PUNTOS CLAVE DE APRENDIZAJE:\n- Principio Fundamental: En base al texto expuesto ("${snippet}...").\n- Metodología: Procedimientos estructurados en los apuntes.`;
+                    summaryResult = `📖 RESUMEN DETALLADO (MATERIA: ${targetSub.name})\n\n1. MARCO TEÓRICO:\nSe analizan las definiciones fundamentales expuestas en los apuntes.\n\n2. DESARROLLO CONCEPTUAL:\n- Contextualización: "${snippet.substring(0, 150)}..."\n- Relación lógica con las evaluaciones del curso.\n\n3. CONCLUSIONES: Guía clave para el examen.`;
                 } else if (summaryType === 'keywords') {
-                    summaryResult = `🔑 PALABRAS CLAVE:\n\n- Concepto Central: Marco Teórico Principal\n- Variable A: Análisis Estructural\n- Variable B: Aplicación Práctica\n- Referencia: "${snippet.substring(0, 100)}..."`;
+                    summaryResult = `🔑 PALABRAS CLAVE Y GLOSARIO (MATERIA: ${targetSub.name})\n\n• Concepto A: Definición estructural principal.\n• Concepto B: Variable de aplicación directa.\n• Fragmento Clave: "${snippet.substring(0, 100)}..."`;
                 } else if (summaryType === 'schema') {
-                    summaryResult = `🧠 ESQUEMA CONCEPTUAL ESTRUCTURADO:\n\n[UNIDAD CENTRAL]\n ├── 1. Núcleo Teórico\n │    ├── Definición Inicial ("${snippet.substring(0, 60)}...")\n │    └── Principios Clave\n └── 2. Conclusiones`;
+                    summaryResult = `🧠 ESQUEMA CONCEPTUAL (MATERIA: ${targetSub.name})\n\n[SISTEMA CONCEPTUAL]\n ├── 1. Núcleo Teórico\n │    ├── Definición ("${snippet.substring(0, 50)}...")\n │    └── Variables Relevantes\n └── 2. Evaluación Práctica`;
                 }
 
                 setGeneratedSummary(summaryResult);
                 setShowSummaryModal(true);
             };
 
+            const downloadSummaryPDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFont("Helvetica", "bold");
+                doc.setFontSize(16);
+                doc.text("MemorAI - Resumen de Apuntes", 14, 20);
+                doc.setFontSize(10);
+                doc.setFont("Helvetica", "normal");
+                
+                const splitText = doc.splitTextToSize(generatedSummary, 180);
+                doc.text(splitText, 14, 32);
+                doc.save(`Resumen_${selectedSubject ? selectedSubject.name : 'Apuntes'}.pdf`);
+            };
+
+            // GENERAR Y DESCARGAR EXAMEN
             const handleGenerateExamFromConfig = () => {
                 const targetSub = subjects.find(s => s.id === examConfig.subjectId);
                 if (!targetSub || !targetSub.topics || targetSub.topics.length === 0) {
-                    alert("Esta asignatura no tiene ningún temario subido. Sube un PDF primero.");
+                    alert("Sube al menos un PDF primero.");
                     setShowExamConfigModal(false);
                     return;
                 }
 
                 setCurrentSubjectName(targetSub.name);
                 
+                let sourceTopics = examConfig.topicScope === 'all' 
+                    ? targetSub.topics 
+                    : targetSub.topics.filter(t => t.id === examConfig.topicScope);
+
                 let allPages = [];
-                targetSub.topics.forEach(t => {
-                    t.pages.forEach(p => {
-                        allPages.push({ fileName: t.fileName, pageNum: p.pageNum, text: p.text });
-                    });
-                });
+                sourceTopics.forEach(t => t.pages.forEach(p => allPages.push({ fileName: t.fileName, pageNum: p.pageNum, text: p.text })));
 
                 const count = parseInt(examConfig.questionCount) || 15;
                 let generatedQuestions = [];
 
                 for (let i = 1; i <= count; i++) {
                     const randomPage = allPages[Math.floor(Math.random() * allPages.length)];
-                    const shortText = randomPage.text.length > 30 ? randomPage.text.substring(0, 100) : "conceptos fundamentales analizados en el temario";
+                    const shortText = randomPage.text.length > 30 ? randomPage.text.substring(0, 90) : "conceptos analizados";
 
-                    let type = examConfig.format;
-                    if (examConfig.format === 'mixed') {
-                        const types = ['test', 'short', 'long'];
-                        type = types[i % 3];
-                    }
+                    let type = examConfig.format === 'mixed' ? ['test', 'short', 'long'][i % 3] : examConfig.format;
 
                     if (type === 'test') {
                         generatedQuestions.push({
-                            id: i,
-                            type: 'test',
-                            question: `¿Qué implicación conceptual se deriva de lo analizado sobre "${shortText.substring(0, 50)}..."?`,
+                            id: i, type: 'test',
+                            question: `¿Qué conclusión teórica se deduce de: "${shortText.substring(0, 50)}..."?`,
                             options: [
-                                `Permite redefinir la estructura conceptual basándose en los principios teóricos del tema.`,
-                                `Invalida la aplicación práctica al contradecir las hipótesis de trabajo.`,
-                                `Aplica únicamente a modelos empíricos aislados sin valor metodológico.`,
-                                `Sustituye completamente la terminología tradicional empleada en la disciplina.`
+                                `Establece la estructura analítica principal descrita en el temario.`,
+                                `Contradice las premisas metodológicas tradicionales.`,
+                                `Aplica exclusivamente a modelos experimentales secundarios.`,
+                                `Invalida los fundamentos expresados en las normas del curso.`
                             ],
                             correct: 0,
-                            explanation: `Esta conclusión se fundamenta en el análisis desarrollado en la materia.`,
-                            sourceFile: randomPage.fileName,
-                            sourcePage: randomPage.pageNum
+                            explanation: `Derivado directamente del temario de estudio.`,
+                            sourceFile: randomPage.fileName, sourcePage: randomPage.pageNum
                         });
-                    } else if (type === 'short') {
+                    } else {
                         generatedQuestions.push({
-                            id: i,
-                            type: 'short',
-                            question: `Explique brevemente el concepto principal referente a: "${shortText.substring(0, 60)}..."`,
-                            idealAnswer: `La respuesta debe abordar la definición de la variable, sus componentes esenciales y su aplicabilidad directa según la bibliografía del curso.`,
-                            sourceFile: randomPage.fileName,
-                            sourcePage: randomPage.pageNum
-                        });
-                    } else if (type === 'long') {
-                        generatedQuestions.push({
-                            id: i,
-                            type: 'long',
-                            question: `Desarrolle en profundidad el marco teórico y las aplicaciones prácticas asociadas a: "${shortText.substring(0, 70)}..."`,
-                            idealAnswer: `El desarrollo debe incluir: 1) Contextualización teórica, 2) Justificación metodológica y 3) Conclusión crítica.`,
-                            sourceFile: randomPage.fileName,
-                            sourcePage: randomPage.pageNum
+                            id: i, type: type,
+                            question: `Desarrolle la respuesta referente a: "${shortText.substring(0, 60)}..."`,
+                            idealAnswer: `La respuesta debe argumentar el marco teórico e implicaciones del texto.`,
+                            sourceFile: randomPage.fileName, sourcePage: randomPage.pageNum
                         });
                     }
                 }
@@ -692,28 +462,47 @@
                 setActiveTab('generator');
             };
 
+            const downloadExamPDF = () => {
+                if (!currentTest) return;
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFont("Helvetica", "bold");
+                doc.setFontSize(16);
+                doc.text(`MemorAI: Examen de ${currentSubjectName}`, 14, 20);
+                doc.setFontSize(10);
+                doc.setFont("Helvetica", "normal");
+                doc.text(`Nombre del Alumno: ________________________   Fecha: _________`, 14, 28);
+                
+                let y = 40;
+                currentTest.forEach((q, idx) => {
+                    if (y > 270) { doc.addPage(); y = 20; }
+                    doc.setFont("Helvetica", "bold");
+                    doc.text(`${idx + 1}. ${q.question}`, 14, y);
+                    y += 6;
+
+                    if (q.type === 'test') {
+                        doc.setFont("Helvetica", "normal");
+                        q.options.forEach((opt, oIdx) => {
+                            const letter = String.fromCharCode(65 + oIdx);
+                            doc.text(`   [  ] ${letter}) ${opt.substring(0, 75)}`, 14, y);
+                            y += 6;
+                        });
+                    } else {
+                        y += 12; // Espacio para escribir a mano
+                    }
+                    y += 4;
+                });
+
+                doc.save(`Examen_${currentSubjectName}_Imprimir.pdf`);
+            };
+
             const handlePracticeExam = (exam) => {
                 setCurrentSubjectName(exam.subject);
                 setCurrentTest([
-                    {
-                        id: 1,
-                        type: 'test',
-                        question: "¿Cuál es el objetivo primordial de la repetición espaciada?",
-                        options: [
-                            "Optimizar la retención a largo plazo combatiendo la curva del olvido",
-                            "Sustituir los exámenes por lecturas automáticas",
-                            "Reducir el tiempo de clase presencial",
-                            "Memorizar textos literalmente sin comprensión"
-                        ],
-                        correct: 0,
-                        explanation: "La repetición espaciada distribuye las autoevaluaciones en el tiempo.",
-                        sourceFile: "Banco Comunitario",
-                        sourcePage: 1
-                    }
+                    { id: 1, type: 'test', question: "¿Cuál es el objetivo principal de la repetición espaciada?", options: ["Aplanar la curva del olvido", "Acelerar la lectura sin comprender", "Evitar el uso de exámenes", "Memorización pasiva"], correct: 0, explanation: "Consolida datos en la memoria a largo plazo.", sourceFile: "Comunidad", sourcePage: 1 }
                 ]);
-                setUserAnswers({});
-                setTestSubmitted(false);
-                setActiveTab('generator');
+                setUserAnswers({}); setTestSubmitted(false); setActiveTab('generator');
             };
 
             const handleSelectOption = (qId, val) => {
@@ -723,22 +512,31 @@
 
             const calculateScore = () => {
                 if (!currentTest) return 0;
-                let testQuestions = currentTest.filter(q => q.type === 'test');
-                if (testQuestions.length === 0) return 10;
-
-                let correctCount = 0;
-                testQuestions.forEach(q => {
-                    if (userAnswers[q.id] === q.correct) correctCount++;
-                });
-                return Math.round((correctCount / testQuestions.length) * 10);
+                let testQs = currentTest.filter(q => q.type === 'test');
+                if (testQs.length === 0) return 10;
+                let correct = 0;
+                testQs.forEach(q => { if (userAnswers[q.id] === q.correct) correct++; });
+                return Math.round((correct / testQs.length) * 10);
             };
 
             const handleFinishTest = () => {
                 setTestSubmitted(true);
+                
+                // Guardar en Historial
+                const examRecord = {
+                    id: Date.now(),
+                    subjectName: currentSubjectName,
+                    date: new Date().toLocaleDateString('es-ES'),
+                    score: calculateScore(),
+                    totalQuestions: currentTest.length
+                };
+                setSavedExamHistory(prev => [examRecord, ...prev]);
+
+                // PUBLICAR EN COMUNIDAD
                 if (isPublic && currentTest) {
                     const newPublicExam = {
                         id: Date.now(),
-                        title: `Examen de ${currentSubjectName}`,
+                        title: `Examen Completo de ${currentSubjectName}`,
                         university: user ? user.university : "Universidad General",
                         subject: currentSubjectName,
                         author: user ? user.name : "Estudiante MemorAI",
@@ -753,52 +551,40 @@
 
             return (
                 <div className="flex-1 flex flex-col min-h-screen">
-                    {/* BARRA DE NAVEGACIÓN */}
-                    <nav className="bg-white border-b border-purple-100 sticky top-0 z-40 shadow-sm">
+                    {/* NAV BAR */}
+                    <nav className="bg-white/90 backdrop-blur-md border-b border-purple-100 sticky top-0 z-40 shadow-sm">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex justify-between h-16 items-center">
-                                <div className="flex items-center space-x-2 font-bold text-xl cursor-pointer" onClick={() => user && setActiveTab('dashboard')}>
-                                    <div className="bg-brand-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20">
+                                {/* LOGO NAVEGABLE AL PANEL */}
+                                <div className="flex items-center space-x-2 font-bold text-xl cursor-pointer group" onClick={handleLogoClick}>
+                                    <div className="bg-gradient-to-tr from-brand-600 to-amber-500 text-white p-2.5 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
                                         <Icon name="brain" className="w-6 h-6" />
                                     </div>
-                                    <span className="text-brand-900 tracking-tight">Memor<span className="text-brand-600">AI</span></span>
+                                    <span className="text-brand-900 tracking-tight text-2xl font-black">Memor<span className="text-brand-600">AI</span></span>
                                 </div>
 
                                 {user && (
-                                    <div className="flex items-center space-x-1 sm:space-x-4">
-                                        <button 
-                                            onClick={() => { setActiveTab('dashboard'); setSelectedSubjectId(null); }}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'dashboard' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
+                                    <div className="flex items-center space-x-2 sm:space-x-4">
+                                        <button onClick={() => { setActiveTab('dashboard'); setSelectedSubjectId(null); }} className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${activeTab === 'dashboard' ? 'bg-brand-100 text-brand-800' : 'text-slate-600 hover:text-brand-600'}`}>
                                             Panel
                                         </button>
-                                        <button 
-                                            onClick={() => setActiveTab('generator')}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'generator' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
+                                        <button onClick={() => setActiveTab('generator')} className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${activeTab === 'generator' ? 'bg-brand-100 text-brand-800' : 'text-slate-600 hover:text-brand-600'}`}>
                                             Simulador / Test
                                         </button>
-                                        <button 
-                                            onClick={() => setActiveTab('community')}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'community' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
+                                        <button onClick={() => setActiveTab('community')} className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${activeTab === 'community' ? 'bg-brand-100 text-brand-800' : 'text-slate-600 hover:text-brand-600'}`}>
                                             Comunidad ({publicExams.length})
                                         </button>
-                                        
-                                        {/* CLIC EN PERFIL DE USUARIO */}
-                                        <div className="pl-4 border-l border-slate-200 flex items-center space-x-3">
-                                            <div 
-                                                onClick={handleOpenProfileModal}
-                                                className="hidden md:block text-right cursor-pointer hover:opacity-80 transition group"
-                                                title="Hacer clic para editar perfil">
-                                                <div className="text-xs font-bold text-slate-800 flex items-center justify-end space-x-1">
+
+                                        <div className="pl-3 border-l border-slate-200 flex items-center space-x-3">
+                                            <div onClick={() => setShowProfileModal(true)} className="hidden md:block text-right cursor-pointer hover:opacity-80 transition" title="Editar Perfil">
+                                                <div className="text-xs font-extrabold text-slate-800 flex items-center justify-end space-x-1">
                                                     <span>{user.name}</span>
                                                     <Icon name="user" className="w-3.5 h-3.5 text-brand-600" />
                                                 </div>
-                                                <div className="text-xs text-slate-500 max-w-[160px] truncate" title={`${user.degree} • ${user.university}`}>{user.degree}</div>
+                                                <div className="text-[11px] text-slate-500 font-medium truncate max-w-[140px]">{user.degree}</div>
                                             </div>
 
-                                            <button 
-                                                onClick={() => setUser(null)}
-                                                className="p-2 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition"
-                                                title="Cerrar Sesión">
+                                            <button onClick={() => setUser(null)} className="p-2 text-slate-400 hover:text-red-500 rounded-xl hover:bg-red-50 transition" title="Cerrar Sesión">
                                                 <Icon name="log-out" className="w-5 h-5" />
                                             </button>
                                         </div>
@@ -810,318 +596,138 @@
 
                     {/* VISTAS */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-                        
-                        {/* 1. AUTENTICACIÓN / RESTABLECER CONTRASEÑA */}
-                        {!user && (
+                        {!user ? (
+                            /* LANDING Y AUTH */
                             <div className="py-8 max-w-4xl mx-auto">
-                                <div className="text-center mb-10">
-                                    <div className="inline-flex items-center space-x-2 bg-brand-50 text-brand-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 border border-brand-200">
-                                        <Icon name="sparkles" className="w-4 h-4" />
-                                        <span>Potenciado con Repetición Espaciada e IA</span>
+                                <div className="text-center mb-10 space-y-4">
+                                    <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-brand-100 to-amber-100 text-brand-800 px-4 py-1.5 rounded-full text-xs font-bold border border-purple-200 shadow-sm">
+                                        <Icon name="sparkles" className="w-4 h-4 text-brand-600" />
+                                        <span>Tu Aula Inteligente de Estudio Universitario</span>
                                     </div>
-                                    <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
-                                        Memor<span className="text-brand-600">AI</span>: Tu Aula Inteligente
+                                    <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight">
+                                        Memor<span className="text-brand-600">AI</span>: Aprende y Domina
                                     </h1>
-                                    <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                                        Organiza tus asignaturas, sube tus temarios en PDF, genera resúmenes inteligentes y exámenes de hasta 30 preguntas.
+                                    <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-medium">
+                                        Organiza asignaturas, descarga resúmenes y crea exámenes imprimibles personalizados con IA.
                                     </p>
                                 </div>
 
-                                <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-md mx-auto">
-                                    <div className="flex border-b border-slate-100">
-                                        <button 
-                                            onClick={() => { setAuthMode('login'); setAuthError(''); setAuthErrorSuccess(''); }}
-                                            className={`flex-1 py-4 text-center font-semibold text-sm transition ${authMode === 'login' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}>
+                                <div className="bg-white rounded-3xl shadow-2xl border border-purple-100 overflow-hidden max-w-md mx-auto">
+                                    <div className="flex border-b border-slate-100 bg-slate-50/50">
+                                        <button onClick={() => { setAuthMode('login'); setAuthError(''); }} className={`flex-1 py-4 text-center font-bold text-xs transition ${authMode === 'login' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'text-slate-500 hover:text-slate-700'}`}>
                                             Iniciar Sesión
                                         </button>
-                                        <button 
-                                            onClick={() => { setAuthMode('register'); setAuthError(''); setAuthErrorSuccess(''); }}
-                                            className={`flex-1 py-4 text-center font-semibold text-sm transition ${authMode === 'register' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}>
+                                        <button onClick={() => { setAuthMode('register'); setAuthError(''); }} className={`flex-1 py-4 text-center font-bold text-xs transition ${authMode === 'register' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'text-slate-500 hover:text-slate-700'}`}>
                                             Registrarse
                                         </button>
                                     </div>
 
-                                    {authMode === 'forgot' ? (
-                                        /* FORMULARIO RECUPERAR CONTRASEÑA */
-                                        <div className="p-6 space-y-4">
-                                            <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
-                                                <Icon name="key" className="w-5 h-5 text-brand-600" />
-                                                <span>Recuperar Contraseña</span>
-                                            </h3>
+                                    <form onSubmit={handleAuthSubmit} className="p-6 space-y-4">
+                                        {authError && (
+                                            <div className="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-xs font-bold flex items-center space-x-2">
+                                                <Icon name="alert-circle" className="w-4 h-4" />
+                                                <span>{authError}</span>
+                                            </div>
+                                        )}
 
-                                            {authError && (
-                                                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-semibold flex items-center space-x-2">
-                                                    <Icon name="alert-circle" className="w-4 h-4 flex-shrink-0" />
-                                                    <span>{authError}</span>
-                                                </div>
-                                            )}
+                                        {authMode === 'register' && (
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre Completo</label>
+                                                <input type="text" name="fullName" required value={formData.fullName} onChange={handleAuthInput} placeholder="Ej. Ana García" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
+                                            </div>
+                                        )}
 
-                                            {!resetTokenSent ? (
-                                                <form onSubmit={handleSendResetLink} className="space-y-4">
-                                                    <p className="text-xs text-slate-500">Introduce el correo electrónico de tu cuenta para enviarte un enlace de restablecimiento.</p>
-                                                    <div>
-                                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
-                                                        <input 
-                                                            type="email" 
-                                                            required
-                                                            value={forgotEmail} 
-                                                            onChange={(e) => setForgotEmail(e.target.value)} 
-                                                            placeholder="tu.email@universidad.edu" 
-                                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                        />
-                                                    </div>
-                                                    <div className="flex space-x-2">
-                                                        <button 
-                                                            type="button" 
-                                                            onClick={() => setAuthMode('login')}
-                                                            className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-xs hover:bg-slate-200 transition">
-                                                            Volver
-                                                        </button>
-                                                        <button 
-                                                            type="submit" 
-                                                            className="flex-1 py-2.5 bg-brand-600 text-white font-semibold rounded-xl text-xs hover:bg-brand-700 transition">
-                                                            Enviar Correo
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            ) : (
-                                                /* SIMULACIÓN DE RECEPCIÓN DE CORREO Y CAMBIO DE CLAVE */
-                                                <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
-                                                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium space-y-1">
-                                                        <p className="font-bold flex items-center space-x-1">
-                                                            <Icon name="mail" className="w-4 h-4 text-emerald-600 mr-1" />
-                                                            <span>¡Mensaje enviado a tu email!</span>
-                                                        </p>
-                                                        <p className="text-[11px]">En un entorno real recibirías un enlace. Introduce abajo tu nueva contraseña para actualizarla:</p>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nueva Contraseña</label>
-                                                        <input 
-                                                            type="password" 
-                                                            required
-                                                            value={newPassword} 
-                                                            onChange={(e) => setNewPassword(e.target.value)} 
-                                                            placeholder="••••••••" 
-                                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                        />
-                                                    </div>
-
-                                                    <button 
-                                                        type="submit" 
-                                                        className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm shadow">
-                                                        Guardar Nueva Contraseña
-                                                    </button>
-                                                </form>
-                                            )}
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Correo Electrónico</label>
+                                            <input type="email" name="email" required value={formData.email} onChange={handleAuthInput} placeholder="tu.email@universidad.edu" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
                                         </div>
-                                    ) : (
-                                        /* FORMULARIO LOGIN / REGISTRO */
-                                        <form onSubmit={handleAuthSubmit} className="p-6 space-y-4">
-                                            {authSuccess && (
-                                                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs font-semibold flex items-center space-x-2">
-                                                    <Icon name="check-circle" className="w-4 h-4 flex-shrink-0" />
-                                                    <span>{authSuccess}</span>
-                                                </div>
-                                            )}
 
-                                            {authError && (
-                                                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-semibold flex items-center space-x-2">
-                                                    <Icon name="alert-circle" className="w-4 h-4 flex-shrink-0" />
-                                                    <span>{authError}</span>
-                                                </div>
-                                            )}
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña</label>
+                                            <input type="password" name="password" required value={formData.password} onChange={handleAuthInput} placeholder="••••••••" className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
+                                        </div>
 
-                                            {authMode === 'register' && (
+                                        {authMode === 'register' && (
+                                            <>
                                                 <div>
-                                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre Completo</label>
-                                                    <input 
-                                                        type="text" 
-                                                        name="fullName"
-                                                        required
-                                                        value={formData.fullName} 
-                                                        onChange={handleAuthInput} 
-                                                        placeholder="Ej. María García" 
-                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                    />
+                                                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Universidad</label>
+                                                    <UniversitySelect name="university" value={formData.university} onChange={handleAuthInput} />
                                                 </div>
-                                            )}
-
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
-                                                <input 
-                                                    type="email" 
-                                                    name="email"
-                                                    required
-                                                    value={formData.email} 
-                                                    onChange={handleAuthInput} 
-                                                    placeholder="tu.email@universidad.edu" 
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <label className="block text-xs font-semibold text-slate-600 uppercase">Contraseña</label>
-                                                    {authMode === 'login' && (
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => { setAuthMode('forgot'); setAuthError(''); setAuthErrorSuccess(''); }}
-                                                            className="text-xs text-brand-600 hover:underline font-medium">
-                                                            ¿Has olvidado tu contraseña?
-                                                        </button>
-                                                    )}
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Carrera / Grado</label>
+                                                    <input type="text" name="degree" required value={formData.degree} onChange={handleAuthInput} placeholder="Ej. Medicina, Derecho..." className="w-full px-4 py-2.5 rounded-xl border border-purple-100 focus:ring-2 focus:ring-brand-500 text-sm" />
                                                 </div>
-                                                <input 
-                                                    type="password" 
-                                                    name="password"
-                                                    required
-                                                    value={formData.password} 
-                                                    onChange={handleAuthInput} 
-                                                    placeholder="••••••••" 
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                />
-                                            </div>
+                                            </>
+                                        )}
 
-                                            {authMode === 'register' && (
-                                                <>
-                                                    <div>
-                                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Universidad</label>
-                                                        <UniversitySelect 
-                                                            name="university"
-                                                            value={formData.university}
-                                                            onChange={handleAuthInput}
-                                                        />
-                                                    </div>
-
-                                                    {(formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') && (
-                                                        <div>
-                                                            <label className="block text-xs font-semibold text-brand-700 uppercase mb-1">Nombre de tu Universidad</label>
-                                                            <input 
-                                                                type="text" 
-                                                                name="customUniversity"
-                                                                required
-                                                                value={formData.customUniversity} 
-                                                                onChange={handleAuthInput} 
-                                                                placeholder="Ej. Harvard, UBA, etc." 
-                                                                className="w-full px-4 py-2.5 rounded-xl border border-brand-300 bg-brand-50/40 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                            />
-                                                        </div>
-                                                    )}
-
-                                                    <div>
-                                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Carrera / Grado</label>
-                                                        <input 
-                                                            type="text" 
-                                                            name="degree"
-                                                            required
-                                                            value={formData.degree} 
-                                                            onChange={handleAuthInput} 
-                                                            placeholder="Ej. Medicina, Derecho, Ing. Informática, etc." 
-                                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                                                        />
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            <button 
-                                                type="submit" 
-                                                className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/30 transition duration-200 text-sm mt-2">
-                                                {authMode === 'login' ? 'Acceder a mi Aula' : 'Crear mi Cuenta'}
-                                            </button>
-                                        </form>
-                                    )}
+                                        <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-brand-600 to-amber-500 hover:from-brand-700 hover:to-amber-600 text-white font-extrabold rounded-2xl shadow-lg shadow-brand-500/25 transition text-sm">
+                                            {authMode === 'login' ? 'Acceder a mi Aula 🚀' : 'Crear mi Cuenta 🎉'}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                        )}
-
-                        {/* 2. PANEL DE ESTUDIANTE (DASHBOARD O VISTA DE ASIGNATURA) */}
-                        {user && activeTab === 'dashboard' && (
+                        ) : activeTab === 'dashboard' ? (
+                            /* DASHBOARD PRINCIPAL */
                             <div className="space-y-8">
-                                {/* Encabezado */}
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div>
-                                        <div className="flex items-center space-x-3">
-                                            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                                {selectedSubject ? selectedSubject.name : `¡Hola de nuevo, ${user.name}! 👋`}
-                                            </h2>
-                                            {!selectedSubject && (
-                                                <button 
-                                                    onClick={handleOpenProfileModal}
-                                                    className="p-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-semibold transition inline-flex items-center space-x-1"
-                                                    title="Editar información de perfil">
-                                                    <Icon name="user" className="w-3.5 h-3.5" />
-                                                    <span>Editar perfil</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                        <p className="text-slate-500 text-sm mt-1">
-                                            {selectedSubject ? `Gestión de Temario, Resúmenes y Exámenes` : `${user.degree} • ${user.university}`}
+                                        <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                                            {selectedSubject ? selectedSubject.name : `¡Hola de nuevo, ${user.name}! 👋`}
+                                        </h2>
+                                        <p className="text-slate-500 text-sm font-medium mt-1">
+                                            {selectedSubject ? `Aprende, resume y evalúa tu progreso` : `${user.degree} • ${user.university}`}
                                         </p>
                                     </div>
                                     <div className="flex space-x-3">
                                         {selectedSubject && (
-                                            <button 
-                                                onClick={() => setSelectedSubjectId(null)}
-                                                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition">
-                                                Volver al Panel
+                                            <button onClick={() => setSelectedSubjectId(null)} className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-xs transition">
+                                                Volver a Asignaturas
                                             </button>
                                         )}
-                                        <button 
-                                            onClick={() => setShowModal(true)}
-                                            className="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-brand-500/20 text-sm transition">
+                                        <button onClick={() => setShowModal(true)} className="inline-flex items-center space-x-2 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-brand-500/20 text-xs transition">
                                             <Icon name="plus" className="w-4 h-4" />
                                             <span>Nueva Asignatura</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Vista Detallada de Asignatura */}
                                 {selectedSubject ? (
+                                    /* DETALLE ASIGNATURA */
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-6">
-                                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 space-y-4">
                                                 <div className="flex justify-between items-center">
-                                                    <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                                                    <h3 className="text-lg font-extrabold text-slate-800 flex items-center space-x-2">
                                                         <Icon name="file-text" className="w-5 h-5 text-brand-600" />
-                                                        <span>Temario / Apuntes en PDF ({selectedSubject.topics?.length || 0})</span>
+                                                        <span>Temarios / PDFs ({selectedSubject.topics?.length || 0})</span>
                                                     </h3>
-                                                    
-                                                    <label htmlFor="pdf-upload-subject" className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow inline-flex items-center space-x-2">
+                                                    <label htmlFor="pdf-upload" className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow inline-flex items-center space-x-2">
                                                         <Icon name="upload-cloud" className="w-4 h-4" />
-                                                        <span>{isExtractingPDF ? 'Procesando...' : 'Subir PDF'}</span>
+                                                        <span>{isExtractingPDF ? 'Leyendo...' : 'Subir PDF'}</span>
                                                     </label>
-                                                    <input 
-                                                        type="file" 
-                                                        id="pdf-upload-subject" 
-                                                        accept="application/pdf" 
-                                                        onChange={(e) => handleFileUploadToSubject(e, selectedSubject.id)} 
-                                                        className="hidden" 
-                                                    />
+                                                    <input type="file" id="pdf-upload" accept="application/pdf" onChange={(e) => handleFileUploadToSubject(e, selectedSubject.id)} className="hidden" />
                                                 </div>
 
                                                 {!selectedSubject.topics || selectedSubject.topics.length === 0 ? (
-                                                    <div className="border-2 border-dashed border-slate-200 p-8 rounded-2xl text-center text-slate-400">
-                                                        <Icon name="upload-cloud" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                                                        <p className="text-sm font-semibold">Aún no has subido temario para esta asignatura.</p>
-                                                        <p className="text-xs text-slate-400 mt-1">Sube tus archivos PDF para generar exámenes o resúmenes con IA.</p>
+                                                    <div className="border-2 border-dashed border-purple-200 p-8 rounded-2xl text-center text-slate-400 space-y-2">
+                                                        <Icon name="upload-cloud" className="w-10 h-10 mx-auto text-brand-400" />
+                                                        <p className="text-sm font-bold text-slate-700">Aún no has subido ningún PDF a esta materia.</p>
+                                                        <p className="text-xs text-slate-400">Sube apuntes para generar resúmenes y exámenes automáticos.</p>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-3">
-                                                        {selectedSubject.topics.map((topic) => (
-                                                            <div key={topic.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                                                        {selectedSubject.topics.map(t => (
+                                                            <div key={t.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
                                                                 <div className="flex items-center space-x-3">
-                                                                    <div className="p-2.5 bg-red-100 text-red-600 rounded-lg">
+                                                                    <div className="p-2 bg-red-100 text-red-600 rounded-xl">
                                                                         <Icon name="file" className="w-5 h-5" />
                                                                     </div>
                                                                     <div>
-                                                                        <h4 className="text-sm font-bold text-slate-800">{topic.fileName}</h4>
-                                                                        <p className="text-xs text-slate-500">{topic.pageCount} Páginas • Subido el {topic.uploadDate}</p>
+                                                                        <h4 className="text-sm font-bold text-slate-800">{t.fileName}</h4>
+                                                                        <p className="text-xs text-slate-500">{t.pageCount} Páginas • {t.uploadDate}</p>
                                                                     </div>
                                                                 </div>
-                                                                <button 
-                                                                    onClick={() => handleDeleteTopic(selectedSubject.id, topic.id)}
-                                                                    className="text-slate-400 hover:text-red-500 p-2 transition">
+                                                                <button onClick={() => handleDeleteTopic(selectedSubject.id, t.id)} className="text-slate-400 hover:text-red-500 p-2">
                                                                     <Icon name="trash-2" className="w-4 h-4" />
                                                                 </button>
                                                             </div>
@@ -1131,239 +737,202 @@
                                             </div>
                                         </div>
 
+                                        {/* ACCIONES HERRAMIENTAS IA */}
                                         <div className="space-y-6">
-                                            <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl space-y-2">
-                                                <div className="text-xs text-brand-400 font-bold uppercase tracking-wider flex items-center space-x-1">
+                                            <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl space-y-2">
+                                                <div className="text-xs text-amber-400 font-bold uppercase tracking-wider flex items-center space-x-1">
                                                     <Icon name="clock" className="w-4 h-4" />
-                                                    <span>Cuenta Atrás de Examen</span>
+                                                    <span>Cuenta Atrás</span>
                                                 </div>
-                                                <div className="text-2xl font-black text-white">
-                                                    {getCountdownText(selectedSubject.examDate)}
-                                                </div>
-                                                <p className="text-xs text-slate-400">Fecha fijada: {selectedSubject.examDate !== 'Sin fecha' ? selectedSubject.examDate : 'Sin asignar'}</p>
+                                                <div className="text-2xl font-black text-white">{getCountdownText(selectedSubject.examDate)}</div>
                                             </div>
 
-                                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                                                <h3 className="text-base font-bold text-slate-800 flex items-center space-x-2">
+                                            {/* GENERAR RESUMEN */}
+                                            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+                                                <h3 className="text-base font-extrabold text-slate-800 flex items-center space-x-2">
                                                     <Icon name="list" className="w-5 h-5 text-brand-600" />
-                                                    <span>Resumir Apuntes con IA</span>
+                                                    <span>Resumir Apuntes IA</span>
                                                 </h3>
                                                 
                                                 <div className="space-y-3">
-                                                    <label className="block text-xs font-semibold text-slate-600 uppercase">Formato de Resumen</label>
-                                                    <select 
-                                                        value={summaryType}
-                                                        onChange={(e) => setSummaryType(e.target.value)}
-                                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none bg-white">
-                                                        <option value="short">📌 Resumen Muy Corto / Highlights</option>
-                                                        <option value="medium">📖 Resumen Medio / Detallado</option>
-                                                        <option value="keywords">🔑 Solo Palabras Clave</option>
-                                                        <option value="schema">🧠 Esquema / Mapa Conceptual</option>
-                                                    </select>
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Elegir Temario</label>
+                                                        <select value={summaryTopicScope} onChange={(e) => setSummaryTopicScope(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                                            <option value="all">📚 Todo el temario completo</option>
+                                                            {selectedSubject.topics?.map(t => (
+                                                                <option key={t.id} value={t.id}>📄 {t.fileName}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
 
-                                                    <button 
-                                                        onClick={handleGenerateSummary}
-                                                        className="w-full py-2.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-bold rounded-xl text-xs transition border border-brand-200 flex items-center justify-center space-x-2">
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Formato</label>
+                                                        <select value={summaryType} onChange={(e) => setSummaryType(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                                            <option value="short">📌 Resumen Muy Corto</option>
+                                                            <option value="medium">📖 Resumen Detallado</option>
+                                                            <option value="keywords">🔑 Palabras Clave</option>
+                                                            <option value="schema">🧠 Esquema Conceptual</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <button onClick={handleGenerateSummary} className="w-full py-2.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-extrabold rounded-xl text-xs transition border border-brand-200 flex items-center justify-center space-x-2">
                                                         <Icon name="sparkles" className="w-4 h-4" />
-                                                        <span>Generar Resumen</span>
+                                                        <span>Generar y Vista Previa</span>
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                                                <h3 className="text-base font-bold text-slate-800 flex items-center space-x-2">
+                                            {/* GENERAR EXAMEN */}
+                                            <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+                                                <h3 className="text-base font-extrabold text-slate-800 flex items-center space-x-2">
                                                     <Icon name="brain" className="w-5 h-5 text-brand-600" />
-                                                    <span>Generar Examen por IA</span>
+                                                    <span>Generar Examen IA</span>
                                                 </h3>
-                                                <button 
-                                                    onClick={() => {
-                                                        if (!selectedSubject.topics || selectedSubject.topics.length === 0) {
-                                                            alert("Sube al menos un PDF en esta asignatura para generar el examen.");
-                                                            return;
-                                                        }
-                                                        setExamConfig({ ...examConfig, subjectId: selectedSubject.id });
-                                                        setShowExamConfigModal(true);
-                                                    }}
-                                                    className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 text-xs transition flex items-center justify-center space-x-2">
+                                                <button onClick={() => {
+                                                    if (!selectedSubject.topics || selectedSubject.topics.length === 0) {
+                                                        alert("Sube al menos un PDF primero.");
+                                                        return;
+                                                    }
+                                                    setExamConfig({ ...examConfig, subjectId: selectedSubject.id });
+                                                    setShowExamConfigModal(true);
+                                                }} className="w-full py-3 bg-gradient-to-r from-brand-600 to-amber-500 hover:from-brand-700 hover:to-amber-600 text-white font-extrabold rounded-xl shadow-md text-xs transition flex items-center justify-center space-x-2">
                                                     <Icon name="sparkles" className="w-4 h-4" />
-                                                    <span>Configurar Examen IA</span>
+                                                    <span>Configurar Examen</span>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    /* VISTA GENERAL DASHBOARD */
-                                    <div className="space-y-8">
-                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                            <div className="lg:col-span-2 space-y-4">
-                                                <h3 className="text-lg font-bold text-slate-800">Mis Asignaturas ({subjects.length})</h3>
-                                                
-                                                {subjects.length === 0 ? (
-                                                    <div className="bg-white p-8 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
-                                                        <Icon name="book-open" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                                                        <p className="text-sm font-semibold">No has añadido asignaturas todavía.</p>
-                                                        <p className="text-xs text-slate-400 mb-4">Añade materias para subir sus temarios correspondientes.</p>
-                                                        <button 
-                                                            onClick={() => setShowModal(true)} 
-                                                            className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow hover:bg-brand-700 transition">
-                                                            Añadir Primera Asignatura
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                        {subjects.map((sub) => (
-                                                            <div key={sub.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-brand-300 transition space-y-4">
-                                                                <div>
-                                                                    <div className="flex items-start justify-between mb-2">
-                                                                        <div className="flex items-center space-x-2">
-                                                                            <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
-                                                                                <Icon name="book-open" className="w-5 h-5" />
-                                                                            </div>
-                                                                            <span className="font-extrabold text-slate-900 text-xl tracking-tight">{sub.name}</span>
-                                                                        </div>
-                                                                        <button 
-                                                                            onClick={() => handleDeleteSubject(sub.id)}
-                                                                            className="text-slate-300 hover:text-red-500 transition p-1"
-                                                                            title="Eliminar materia">
-                                                                            <Icon name="trash-2" className="w-4 h-4" />
-                                                                        </button>
-                                                                    </div>
+                                    /* GENERAL PANEL DE ASIGNATURAS */
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <div className="lg:col-span-2 space-y-4">
+                                            <h3 className="text-xl font-black text-slate-900">Mis Asignaturas ({subjects.length})</h3>
 
-                                                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5 mt-3">
-                                                                        <div className="flex items-center justify-between text-slate-700 font-semibold">
-                                                                            <span className="flex items-center">
-                                                                                <Icon name="calendar" className="w-3.5 h-3.5 text-brand-500 mr-1.5" />
-                                                                                Examen: {sub.examDate !== 'Sin fecha' ? sub.examDate : 'Sin fecha'}
-                                                                            </span>
+                                            {subjects.length === 0 ? (
+                                                <div className="bg-white p-12 rounded-3xl border border-dashed border-purple-200 text-center space-y-3">
+                                                    <Icon name="book-open" className="w-12 h-12 mx-auto text-brand-400" />
+                                                    <p className="text-base font-bold text-slate-800">No tienes asignaturas registradas.</p>
+                                                    <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-2xl text-xs shadow-lg shadow-brand-500/20">
+                                                        Añadir Primera Asignatura
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {subjects.map(sub => (
+                                                        <div key={sub.id} className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 flex flex-col justify-between hover:border-brand-300 transition space-y-4">
+                                                            <div>
+                                                                <div className="flex items-start justify-between">
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <div className="p-2.5 bg-brand-100 text-brand-700 rounded-2xl">
+                                                                            <Icon name="book-open" className="w-5 h-5" />
                                                                         </div>
-                                                                        <div className="flex items-center text-brand-700 font-bold bg-brand-50 px-2.5 py-1 rounded-lg">
-                                                                            <Icon name="clock" className="w-3.5 h-3.5 mr-1.5 text-brand-600" />
-                                                                            <span>{getCountdownText(sub.examDate)}</span>
-                                                                        </div>
+                                                                        <span className="font-black text-slate-900 text-2xl tracking-tight">{sub.name}</span>
                                                                     </div>
+                                                                    <button onClick={() => handleDeleteSubject(sub.id)} className="text-slate-300 hover:text-red-500 p-1">
+                                                                        <Icon name="trash-2" className="w-4 h-4" />
+                                                                    </button>
                                                                 </div>
 
-                                                                <button 
-                                                                    onClick={() => setSelectedSubjectId(sub.id)}
-                                                                    className="w-full py-2.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1">
-                                                                    <span>Gestionar Temario & Exámenes</span>
-                                                                    <Icon name="chevronRight" className="w-4 h-4" />
-                                                                </button>
+                                                                <div className="bg-purple-50/60 p-3.5 rounded-2xl border border-purple-100 text-xs space-y-1 mt-3">
+                                                                    <div className="text-slate-700 font-bold flex items-center">
+                                                                        <Icon name="calendar" className="w-4 h-4 text-brand-600 mr-1.5" />
+                                                                        <span>Examen: {sub.examDate}</span>
+                                                                    </div>
+                                                                    <div className="text-brand-700 font-extrabold flex items-center pt-1">
+                                                                        <Icon name="clock" className="w-4 h-4 text-amber-500 mr-1.5" />
+                                                                        <span>{getCountdownText(sub.examDate)}</span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
 
-                                            <div className="space-y-6">
-                                                <ExamCalendar subjects={subjects} />
-                                            </div>
+                                                            <button onClick={() => setSelectedSubjectId(sub.id)} className="w-full py-2.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-extrabold rounded-2xl text-xs transition flex items-center justify-center space-x-1">
+                                                                <span>Gestionar Materia</span>
+                                                                <Icon name="chevronRight" className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <ExamCalendar subjects={subjects} />
                                         </div>
                                     </div>
                                 )}
                             </div>
-                        )}
-
-                        {/* 3. SIMULADOR DE EXAMEN */}
-                        {user && activeTab === 'generator' && (
+                        ) : activeTab === 'generator' ? (
+                            /* SIMULADOR DE EXAMEN */
                             <div className="max-w-3xl mx-auto space-y-6">
                                 {!currentTest ? (
-                                    <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center shadow-sm">
-                                        <Icon name="help-circle" className="w-12 h-12 text-brand-400 mx-auto mb-3" />
-                                        <h3 className="text-xl font-bold text-slate-800 mb-2">No hay ningún examen activo</h3>
-                                        <p className="text-slate-500 text-sm mb-6">Selecciona una asignatura y configura las preguntas a partir de tus PDFs subidos.</p>
-                                        <button 
-                                            onClick={() => setActiveTab('dashboard')}
-                                            className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition">
+                                    <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center shadow-xl space-y-4">
+                                        <Icon name="help-circle" className="w-12 h-12 text-brand-400 mx-auto" />
+                                        <h3 className="text-xl font-bold text-slate-800">No hay examen en curso</h3>
+                                        <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2.5 bg-brand-600 text-white font-bold rounded-2xl text-xs shadow">
                                             Ir a Mis Asignaturas
                                         </button>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                                             <div>
-                                                <h2 className="text-xl font-bold text-slate-800">Simulador: {currentSubjectName}</h2>
-                                                <p className="text-xs text-slate-500">{currentTest.length} Preguntas • Generado inteligentemente por IA</p>
+                                                <h2 className="text-2xl font-black text-slate-900">Simulador: {currentSubjectName}</h2>
+                                                <p className="text-xs text-slate-500 font-medium">{currentTest.length} Preguntas • Evaluación Inteligente</p>
                                             </div>
 
-                                            <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-200 self-start">
-                                                <span className={`text-xs font-semibold ${!isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Privado</span>
-                                                <button 
-                                                    onClick={() => setIsPublic(!isPublic)}
-                                                    className={`w-12 h-6 flex items-center rounded-full p-1 transition duration-300 ${isPublic ? 'bg-brand-600 justify-end' : 'bg-slate-300 justify-start'}`}>
-                                                    <div className="bg-white w-4 h-4 rounded-full shadow-md"></div>
+                                            <div className="flex items-center space-x-2">
+                                                {/* BOTÓN IMPRIMIR EXAMEN */}
+                                                <button onClick={downloadExamPDF} className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center space-x-1">
+                                                    <Icon name="printer" className="w-4 h-4" />
+                                                    <span>Descargar Imprimible (PDF)</span>
                                                 </button>
-                                                <span className={`text-xs font-semibold ${isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Público</span>
+
+                                                <div className="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl border">
+                                                    <span className={`text-xs font-bold ${!isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Privado</span>
+                                                    <button onClick={() => setIsPublic(!isPublic)} className={`w-10 h-5 flex items-center rounded-full p-1 transition ${isPublic ? 'bg-brand-600 justify-end' : 'bg-slate-300 justify-start'}`}>
+                                                        <div className="bg-white w-3.5 h-3.5 rounded-full shadow"></div>
+                                                    </button>
+                                                    <span className={`text-xs font-bold ${isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Público</span>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-6">
                                             {currentTest.map((q, idx) => (
-                                                <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                                <div key={q.id} className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
                                                     <div className="flex justify-between items-start">
-                                                        <h3 className="font-bold text-slate-800 text-base">
-                                                            <span className="text-brand-600 mr-2">{idx + 1}.</span> 
-                                                            {q.question}
+                                                        <h3 className="font-extrabold text-slate-800 text-base">
+                                                            <span className="text-brand-600 mr-2">{idx + 1}.</span>{q.question}
                                                         </h3>
-                                                        <span className="text-[10px] uppercase font-bold bg-slate-100 px-2 py-1 rounded text-slate-500">
-                                                            {q.type === 'test' ? 'Tipo Test' : q.type === 'short' ? 'Pregunta Corta' : 'Desarrollo'}
-                                                        </span>
                                                     </div>
 
-                                                    {q.type === 'test' && (
+                                                    {q.type === 'test' ? (
                                                         <div className="space-y-2">
                                                             {q.options.map((opt, oIdx) => {
-                                                                const isSelected = userAnswers[q.id] === oIdx;
-                                                                let btnStyle = "border-slate-200 hover:border-brand-300 bg-slate-50/50";
-
+                                                                const isSel = userAnswers[q.id] === oIdx;
+                                                                let style = "border-slate-200 bg-slate-50/50";
                                                                 if (testSubmitted) {
-                                                                    if (oIdx === q.correct) {
-                                                                        btnStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold";
-                                                                    } else if (isSelected && oIdx !== q.correct) {
-                                                                        btnStyle = "border-red-500 bg-red-50 text-red-800";
-                                                                    }
-                                                                } else if (isSelected) {
-                                                                    btnStyle = "border-brand-600 bg-brand-50 text-brand-900 font-semibold";
-                                                                }
+                                                                    if (oIdx === q.correct) style = "border-emerald-500 bg-emerald-50 text-emerald-800 font-bold";
+                                                                    else if (isSel) style = "border-red-500 bg-red-50 text-red-800";
+                                                                } else if (isSel) style = "border-brand-600 bg-brand-50 font-bold";
 
                                                                 return (
-                                                                    <button
-                                                                        key={oIdx}
-                                                                        onClick={() => handleSelectOption(q.id, oIdx)}
-                                                                        className={`w-full text-left p-3.5 rounded-xl border text-sm transition flex items-center justify-between ${btnStyle}`}>
+                                                                    <button key={oIdx} onClick={() => handleSelectOption(q.id, oIdx)} className={`w-full text-left p-3.5 rounded-2xl border text-xs transition flex items-center justify-between ${style}`}>
                                                                         <span>{opt}</span>
                                                                         {testSubmitted && oIdx === q.correct && <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />}
-                                                                        {testSubmitted && isSelected && oIdx !== q.correct && <Icon name="x-circle" className="w-5 h-5 text-red-500" />}
                                                                     </button>
                                                                 );
                                                             })}
                                                         </div>
-                                                    )}
-
-                                                    {(q.type === 'short' || q.type === 'long') && (
-                                                        <div>
-                                                            <textarea 
-                                                                rows={q.type === 'short' ? 2 : 4}
-                                                                disabled={testSubmitted}
-                                                                value={userAnswers[q.id] || ''}
-                                                                onChange={(e) => handleSelectOption(q.id, e.target.value)}
-                                                                placeholder="Escribe tu respuesta aquí..."
-                                                                className="w-full p-3 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-brand-500">
-                                                            </textarea>
-                                                        </div>
+                                                    ) : (
+                                                        <textarea rows="3" disabled={testSubmitted} value={userAnswers[q.id] || ''} onChange={(e) => handleSelectOption(q.id, e.target.value)} placeholder="Escribe tu respuesta..." className="w-full p-3 rounded-2xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500" />
                                                     )}
 
                                                     {testSubmitted && (
-                                                        <div className="mt-3 p-4 bg-purple-50/70 rounded-xl border border-purple-100 text-xs text-purple-900 space-y-2">
-                                                            {q.type !== 'test' && (
-                                                                <div>
-                                                                    <span className="font-bold text-slate-800">Respuesta Modelo Sugerida: </span>
-                                                                    <p className="mt-1 text-slate-600">{q.idealAnswer}</p>
-                                                                </div>
-                                                            )}
-                                                            <div className="flex items-center space-x-2 text-brand-700 font-bold border-t border-purple-200/60 pt-2">
+                                                        <div className="p-4 bg-purple-50/60 rounded-2xl border border-purple-100 text-xs text-purple-900 space-y-1">
+                                                            <div className="font-bold flex items-center space-x-1 text-brand-700">
                                                                 <Icon name="file-text" className="w-4 h-4" />
-                                                                <span>Ubicación en el Temario: {q.sourceFile} — Página {q.sourcePage}</span>
+                                                                <span>Localización: {q.sourceFile} — Página {q.sourcePage}</span>
                                                             </div>
                                                         </div>
                                                     )}
@@ -1372,69 +941,43 @@
                                         </div>
 
                                         {!testSubmitted ? (
-                                            <button 
-                                                onClick={handleFinishTest}
-                                                className="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 text-sm transition">
-                                                Finalizar Examen y Corregir
+                                            <button onClick={handleFinishTest} className="w-full py-4 bg-gradient-to-r from-brand-600 to-amber-500 text-white font-black rounded-2xl shadow-lg shadow-brand-500/25 transition">
+                                                Finalizar y Corregir
                                             </button>
                                         ) : (
-                                            <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl text-center space-y-4">
-                                                <h3 className="text-lg font-bold text-slate-200">¡Examen Corregido!</h3>
-                                                <div className="text-4xl font-black text-brand-400">
-                                                    Nota Tipo Test: {calculateScore()} / 10
-                                                </div>
-
-                                                {isPublic && (
-                                                    <p className="text-xs text-emerald-400 font-semibold">
-                                                        ✓ Examen publicado correctamente en el Banco Comunitario.
-                                                    </p>
-                                                )}
-
-                                                <button 
-                                                    onClick={() => setActiveTab('dashboard')}
-                                                    className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-sm font-semibold transition">
-                                                    Volver a mis Asignaturas
+                                            <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl text-center space-y-4">
+                                                <h3 className="text-xl font-bold text-slate-200">¡Examen Corregido y Guardado!</h3>
+                                                <div className="text-5xl font-black text-amber-400">{calculateScore()} / 10</div>
+                                                <button onClick={() => setActiveTab('dashboard')} className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl text-xs transition">
+                                                    Volver al Panel
                                                 </button>
                                             </div>
                                         )}
                                     </>
                                 )}
                             </div>
-                        )}
-
-                        {/* 4. BANCO COMUNITARIO */}
-                        {user && activeTab === 'community' && (
+                        ) : (
+                            /* COMUNIDAD FUNCIONAL */
                             <div className="space-y-6">
-                                <div>
-                                    <h2 className="text-2xl font-extrabold text-slate-900">Banco Comunitario de Exámenes</h2>
-                                    <p className="text-slate-500 text-sm">Explora exámenes compartidos públicamente por la comunidad de estudiantes.</p>
-                                </div>
-
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Banco Comunitario de Exámenes</h2>
                                 {publicExams.length === 0 ? (
-                                    <div className="bg-white p-12 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400 space-y-3">
-                                        <Icon name="book-open" className="w-12 h-12 mx-auto text-slate-300" />
-                                        <h3 className="text-lg font-bold text-slate-700">Aún no hay exámenes en la comunidad</h3>
-                                        <p className="text-xs text-slate-400 max-w-md mx-auto">
-                                            Sé el primero en publicar un examen cambiando el interruptor de "Privado" a "Público" al finalizar una prueba.
-                                        </p>
+                                    <div className="bg-white p-12 rounded-3xl border border-dashed border-purple-200 text-center text-slate-400 space-y-2">
+                                        <Icon name="book-open" className="w-12 h-12 mx-auto text-brand-300" />
+                                        <p className="text-base font-bold text-slate-700">Aún no hay exámenes públicos en la comunidad.</p>
+                                        <p className="text-xs text-slate-400">Publica tus autoevaluaciones marcando el examen como "Público".</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {publicExams.map((exam) => (
-                                            <div key={exam.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:border-brand-300 transition">
+                                        {publicExams.map((e) => (
+                                            <div key={e.id} className="bg-white p-6 rounded-3xl border border-purple-100 shadow-xl shadow-purple-500/5 flex flex-col justify-between space-y-4">
                                                 <div>
-                                                    <span className="text-xs font-semibold px-2.5 py-1 bg-brand-50 text-brand-700 rounded-md">
-                                                        {exam.subject}
-                                                    </span>
-                                                    <h3 className="font-bold text-slate-800 text-base mt-2">{exam.title}</h3>
-                                                    <p className="text-xs text-slate-500 mb-4">{exam.university} • Creado por {exam.author}</p>
+                                                    <span className="text-[10px] uppercase font-extrabold px-2.5 py-1 bg-brand-100 text-brand-800 rounded-md">{e.subject}</span>
+                                                    <h3 className="font-bold text-slate-800 text-base mt-2">{e.title}</h3>
+                                                    <p className="text-xs text-slate-500">{e.university} • Creado por {e.author}</p>
                                                 </div>
-
-                                                <button 
-                                                    onClick={() => handlePracticeExam(exam)}
-                                                    className="px-4 py-2 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 text-xs font-bold rounded-xl transition flex items-center justify-between">
-                                                    <span>Practicar ahora</span>
-                                                    <Icon name="arrow-right" className="w-3.5 h-3.5" />
+                                                <button onClick={() => handlePracticeExam(e)} className="px-4 py-2.5 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-extrabold rounded-2xl text-xs transition flex items-center justify-between">
+                                                    <span>Practicar Examen</span>
+                                                    <Icon name="arrow-right" className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         ))}
@@ -1444,223 +987,147 @@
                         )}
                     </main>
 
-                    {/* MODAL: EDITAR PERFIL DE USUARIO */}
-                    {showProfileModal && (
-                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-                                <div className="flex justify-between items-center border-b pb-3">
-                                    <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
-                                        <Icon name="user" className="w-5 h-5 text-brand-600" />
-                                        <span>Editar Mi Perfil</span>
-                                    </h3>
-                                    <button onClick={() => setShowProfileModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <Icon name="x" className="w-5 h-5" />
-                                    </button>
-                                </div>
-
-                                <form onSubmit={handleSaveProfile} className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre Completo</label>
-                                        <input 
-                                            type="text" 
-                                            required
-                                            value={profileForm.name}
-                                            onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Carrera / Grado</label>
-                                        <input 
-                                            type="text" 
-                                            required
-                                            value={profileForm.degree}
-                                            onChange={(e) => setProfileForm({ ...profileForm, degree: e.target.value })}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Universidad</label>
-                                        <UniversitySelect 
-                                            name="university"
-                                            value={profileForm.university}
-                                            onChange={(e) => setProfileForm({ ...profileForm, university: e.target.value })}
-                                        />
-                                    </div>
-
-                                    {(profileForm.university === 'Otra universidad (España)' || profileForm.university === 'Universidad Extranjera / Internacional') && (
-                                        <div>
-                                            <label className="block text-xs font-semibold text-brand-700 uppercase mb-1">Escribe tu Universidad</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                value={profileForm.customUniversity}
-                                                onChange={(e) => setProfileForm({ ...profileForm, customUniversity: e.target.value })}
-                                                placeholder="Ej. Harvard, UBA, etc."
-                                                className="w-full px-4 py-2.5 rounded-xl border border-brand-300 bg-brand-50/40 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="flex space-x-3 justify-end pt-2">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setShowProfileModal(false)}
-                                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
-                                            Cancelar
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
-                                            Guardar Cambios
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* MODAL: AÑADIR ASIGNATURA */}
-                    {showModal && (
-                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-slate-800">Nueva Asignatura</h3>
-                                    <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <Icon name="x" className="w-5 h-5" />
-                                    </button>
-                                </div>
-
-                                <form onSubmit={handleAddSubject} className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre de la Materia</label>
-                                        <input 
-                                            type="text" 
-                                            required
-                                            value={subjectNameInput}
-                                            onChange={(e) => setSubjectNameInput(e.target.value)}
-                                            placeholder="Ej. Farmacología, Derecho Mercantil..." 
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Fecha del Examen</label>
-                                        <input 
-                                            type="date" 
-                                            value={subjectExamDateInput}
-                                            onChange={(e) => setSubjectExamDateInput(e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white"
-                                        />
-                                    </div>
-
-                                    <div className="flex space-x-3 justify-end pt-2">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setShowModal(false)}
-                                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
-                                            Cancelar
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
-                                            Guardar Asignatura
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* MODAL: CONFIGURAR EXAMEN IA */}
+                    {/* MODAL CONFIGURADOR DE EXAMEN */}
                     {showExamConfigModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-slate-800">Configurador de Examen IA</h3>
-                                    <button onClick={() => setShowExamConfigModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <Icon name="x" className="w-5 h-5" />
-                                    </button>
+                            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4">
+                                <div className="flex justify-between items-center border-b pb-3">
+                                    <h3 className="text-lg font-bold text-slate-800">Configurar Examen IA</h3>
+                                    <button onClick={() => setShowExamConfigModal(false)}><Icon name="x" className="w-5 h-5 text-slate-400" /></button>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Formato de Preguntas</label>
-                                        <select 
-                                            value={examConfig.format}
-                                            onChange={(e) => setExamConfig({ ...examConfig, format: e.target.value })}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
-                                            <option value="test">Tipo Test (Opción múltiple)</option>
-                                            <option value="short">Preguntas Cortas</option>
-                                            <option value="long">Preguntas Largas / Desarrollo</option>
-                                            <option value="mixed">Examen Mixto (Combinado)</option>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Elegir Temario</label>
+                                        <select value={examConfig.topicScope} onChange={(e) => setExamConfig({ ...examConfig, topicScope: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                            <option value="all">📚 Todo el temario completo</option>
+                                            {subjects.find(s => s.id === examConfig.subjectId)?.topics?.map(t => (
+                                                <option key={t.id} value={t.id}>📄 {t.fileName}</option>
+                                            ))}
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Número de Preguntas</label>
-                                        <select 
-                                            value={examConfig.questionCount}
-                                            onChange={(e) => setExamConfig({ ...examConfig, questionCount: e.target.value })}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
-                                            <option value="10">10 Preguntas (Rápido)</option>
-                                            <option value="15">15 Preguntas (Estándar)</option>
-                                            <option value="25">25 Preguntas (Extenso)</option>
-                                            <option value="30">30 Preguntas (Examen Completo)</option>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Formato</label>
+                                        <select value={examConfig.format} onChange={(e) => setExamConfig({ ...examConfig, format: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                            <option value="test">Tipo Test</option>
+                                            <option value="short">Preguntas Cortas</option>
+                                            <option value="long">Preguntas de Desarrollo</option>
+                                            <option value="mixed">Examen Mixto</option>
                                         </select>
                                     </div>
 
-                                    <div className="flex space-x-3 justify-end pt-2">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setShowExamConfigModal(false)}
-                                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
-                                            Cancelar
-                                        </button>
-                                        <button 
-                                            onClick={handleGenerateExamFromConfig}
-                                            className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
-                                            Generar Examen
-                                        </button>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Número de Preguntas</label>
+                                        <select value={examConfig.questionCount} onChange={(e) => setExamConfig({ ...examConfig, questionCount: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                                            <option value="10">10 Preguntas</option>
+                                            <option value="15">15 Preguntas</option>
+                                            <option value="25">25 Preguntas</option>
+                                            <option value="30">30 Preguntas</option>
+                                        </select>
                                     </div>
+
+                                    <button onClick={handleGenerateExamFromConfig} className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold rounded-2xl shadow text-xs">
+                                        Generar Examen
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* MODAL: VER RESUMEN GENERADO POR IA */}
+                    {/* MODAL VISTA PREVIA RESUMEN CON BOTÓN DESCARGAR */}
                     {showSummaryModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[85vh] flex flex-col">
+                            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-purple-100 space-y-4 max-h-[85vh] flex flex-col">
                                 <div className="flex justify-between items-center border-b pb-3">
                                     <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
                                         <Icon name="sparkles" className="w-5 h-5 text-brand-600" />
-                                        <span>Resumen Generado por IA</span>
+                                        <span>Vista Previa del Resumen IA</span>
                                     </h3>
-                                    <button onClick={() => setShowSummaryModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <Icon name="x" className="w-5 h-5" />
-                                    </button>
+                                    <button onClick={() => setShowSummaryModal(false)}><Icon name="x" className="w-5 h-5 text-slate-400" /></button>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto p-4 bg-slate-50 rounded-xl font-mono text-xs whitespace-pre-wrap text-slate-800 border border-slate-200">
+                                <div className="flex-1 overflow-y-auto p-4 bg-slate-50 rounded-2xl font-mono text-xs whitespace-pre-wrap text-slate-800 border border-slate-200">
                                     {generatedSummary}
                                 </div>
 
-                                <div className="flex justify-end pt-2">
-                                    <button 
-                                        onClick={() => setShowSummaryModal(false)}
-                                        className="px-5 py-2 text-sm font-semibold bg-brand-600 text-white rounded-xl shadow hover:bg-brand-700 transition">
-                                        Entendido
+                                <div className="flex justify-between items-center pt-2">
+                                    <button onClick={downloadSummaryPDF} className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs shadow flex items-center space-x-2">
+                                        <Icon name="download" className="w-4 h-4" />
+                                        <span>Descargar en PDF</span>
+                                    </button>
+
+                                    <button onClick={() => setShowSummaryModal(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-xs">
+                                        Cerrar
                                     </button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* FOOTER */}
-                    <footer className="bg-white border-t border-slate-100 py-6 mt-12">
+                    {/* MODAL EDITAR PERFIL */}
+                    {showProfileModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4">
+                                <div className="flex justify-between items-center border-b pb-3">
+                                    <h3 className="text-lg font-bold text-slate-800">Editar Mi Perfil</h3>
+                                    <button onClick={() => setShowProfileModal(false)}><Icon name="x" className="w-5 h-5 text-slate-400" /></button>
+                                </div>
+
+                                <form onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const updated = { ...user, name: profileForm.name, degree: profileForm.degree, university: profileForm.university };
+                                    setUser(updated);
+                                    setRegisteredUsers(prev => prev.map(u => u.email === user.email ? updated : u));
+                                    setShowProfileModal(false);
+                                }} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre Completo</label>
+                                        <input type="text" required value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Carrera / Grado</label>
+                                        <input type="text" required value={profileForm.degree} onChange={(e) => setProfileForm({ ...profileForm, degree: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-purple-100 text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Universidad</label>
+                                        <UniversitySelect name="university" value={profileForm.university} onChange={(e) => setProfileForm({ ...profileForm, university: e.target.value })} />
+                                    </div>
+                                    <button type="submit" className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold rounded-2xl shadow text-xs">
+                                        Guardar Cambios
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL CREAR ASIGNATURA */}
+                    {showModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4">
+                                <div className="flex justify-between items-center border-b pb-3">
+                                    <h3 className="text-lg font-bold text-slate-800">Nueva Asignatura</h3>
+                                    <button onClick={() => setShowModal(false)}><Icon name="x" className="w-5 h-5 text-slate-400" /></button>
+                                </div>
+
+                                <form onSubmit={handleAddSubject} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre de la Asignatura</label>
+                                        <input type="text" required value={subjectNameInput} onChange={(e) => setSubjectNameInput(e.target.value)} placeholder="Ej. Anatomía, Estadística..." className="w-full px-4 py-2.5 rounded-xl border text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Fecha de Examen</label>
+                                        <input type="date" value={subjectExamDateInput} onChange={(e) => setSubjectExamDateInput(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border text-sm bg-white" />
+                                    </div>
+                                    <button type="submit" className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-extrabold rounded-2xl shadow text-xs">
+                                        Guardar Asignatura
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="bg-white border-t border-purple-100 py-6 mt-12">
                         <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
                             MemorAI © 2026 — Tu Aula Inteligente con Repetición Espaciada e IA.
                         </div>
