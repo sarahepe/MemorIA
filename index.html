@@ -51,18 +51,54 @@
     <div id="root" class="flex-1 flex flex-col"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, Component } = React;
 
-        // --- Componente de Iconos Lucide con manejo seguro de errores ---
+        // --- LÍMITE DE ERRORES (Evita que cualquier vista rompa la web) ---
+        class ErrorBoundary extends Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                console.error("Error capturado en MemorAI:", error, errorInfo);
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50">
+                            <div className="bg-white p-8 rounded-2xl shadow-xl border border-red-100 max-w-md w-full space-y-4">
+                                <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                                    <i data-lucide="alert-triangle" className="w-6 h-6"></i>
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-800">Ocurrió un contratiempo</h2>
+                                <p className="text-sm text-slate-500">Se produjo un error al procesar esta vista. Puedes recargar la aplicación sin perder la sesión.</p>
+                                <button 
+                                    onClick={() => window.location.reload()} 
+                                    className="w-full py-2.5 bg-brand-600 text-white font-semibold rounded-xl text-sm hover:bg-brand-700 transition">
+                                    Reintentar / Volver a Cargar
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        // --- Componente de Iconos Lucide ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
             useEffect(() => {
                 try {
                     if (window.lucide) {
                         window.lucide.createIcons();
                     }
-                } catch (e) {
-                    console.error("Lucide icon error", e);
-                }
+                } catch (e) {}
             }, [name]);
             return <i data-lucide={name} className={className}></i>;
         };
@@ -132,16 +168,14 @@
                 degree: ''
             });
 
-            // Estado de Asignaturas (Estructura de objetos completa)
+            // Estado de Asignaturas
             const [subjects, setSubjects] = useState([]); 
             const [showModal, setShowModal] = useState(false);
             
             // Formulario para añadir asignatura con fecha de examen
-            const [subjectForm, setSubjectForm] = useState({
-                name: '',
-                examDate: '',
-                examType: 'Examen Parcial'
-            });
+            const [subjectNameInput, setSubjectNameInput] = useState('');
+            const [subjectExamDateInput, setSubjectExamDateInput] = useState('');
+            const [subjectExamTypeInput, setSubjectExamTypeInput] = useState('Examen Parcial');
 
             // Estado de Carga de Apuntes
             const [notesText, setNotesText] = useState('');
@@ -181,7 +215,7 @@
                     });
                 } else {
                     setUser({
-                        name: formData.email.split('@')[0] || 'Estudiante',
+                        name: formData.email ? formData.email.split('@')[0] : 'Estudiante',
                         email: formData.email,
                         university: finalUniversity || 'Universidad Registrada',
                         degree: 'Grado Universitario'
@@ -190,34 +224,37 @@
                 setActiveTab('dashboard');
             };
 
-            // Añadir Asignatura con manejo seguro de estado
+            // Añadir Asignatura completamente funcional y a prueba de errores
             const handleAddSubject = (e) => {
                 e.preventDefault();
-                if (!subjectForm.name.trim()) return;
+                const trimmedName = subjectNameInput.trim();
+                if (!trimmedName) return;
 
                 const newSub = {
-                    id: Date.now(),
-                    name: subjectForm.name.trim(),
-                    examDate: subjectForm.examDate || 'Sin fecha',
-                    examType: subjectForm.examType || 'Examen'
+                    id: String(Date.now()),
+                    name: trimmedName,
+                    examDate: subjectExamDateInput || 'Sin fecha',
+                    examType: subjectExamTypeInput || 'Examen'
                 };
 
-                setSubjects(prevSubjects => [...prevSubjects, newSub]);
-                setSubjectForm({ name: '', examDate: '', examType: 'Examen Parcial' });
+                setSubjects(prev => [...prev, newSub]);
+                setSubjectNameInput('');
+                setSubjectExamDateInput('');
+                setSubjectExamTypeInput('Examen Parcial');
                 setShowModal(false);
             };
 
             // Eliminar Asignatura
             const handleDeleteSubject = (id) => {
-                setSubjects(subjects.filter(s => s.id !== id));
+                setSubjects(prev => prev.filter(s => s.id !== id));
             };
 
-            // Cálculo dinámico de días faltantes para el próximo examen más cercano
+            // Cálculo dinámico de días faltantes
             const getNextExamInfo = () => {
-                if (subjects.length === 0) return "Sin exámenes";
+                if (!subjects || subjects.length === 0) return "Sin exámenes";
                 
                 const validExams = subjects
-                    .filter(s => s.examDate && s.examDate !== 'Sin fecha')
+                    .filter(s => s?.examDate && s.examDate !== 'Sin fecha')
                     .map(s => new Date(s.examDate))
                     .filter(d => !isNaN(d.getTime()) && d >= new Date().setHours(0,0,0,0))
                     .sort((a, b) => a - b);
@@ -231,7 +268,7 @@
 
             // Lectura Real de PDF mediante PDF.js
             const handleFileUpload = (e) => {
-                const file = e.target.files[0];
+                const file = e.target.files?.[0];
                 if (!file) return;
 
                 if (file.type !== 'application/pdf') {
@@ -339,7 +376,7 @@
 
             const handleSelectOption = (qId, optionIdx) => {
                 if (testSubmitted) return;
-                setUserAnswers({ ...userAnswers, [qId]: optionIdx });
+                setUserAnswers(prev => ({ ...prev, [qId]: optionIdx }));
             };
 
             const calculateScore = () => {
@@ -363,7 +400,7 @@
                         questions: currentTest.length,
                         rating: 5.0
                     };
-                    setPublicExams([newPublicExam, ...publicExams]);
+                    setPublicExams(prev => [newPublicExam, ...prev]);
                 }
             };
 
@@ -525,7 +562,6 @@
                                                         <optgroup label="Canarias">
                                                             <option value="Universidad de La Laguna">Universidad de La Laguna</option>
                                                             <option value="Universidad de Las Palmas de Gran Canaria">Universidad de Las Palmas de Gran Canaria</option>
-                                                            <option value="Universidad Fernando Pessoa-Canarias">Universidad Fernando Pessoa-Canarias</option>
                                                         </optgroup>
 
                                                         <optgroup label="Cantabria">
@@ -538,10 +574,7 @@
                                                             <option value="Universidad de Valladolid">Universidad de Valladolid</option>
                                                             <option value="Universidad de León">Universidad de León</option>
                                                             <option value="Universidad de Burgos">Universidad de Burgos</option>
-                                                            <option value="Universidad Pontificia de Salamanca">Universidad Pontificia de Salamanca</option>
                                                             <option value="IE University">IE University</option>
-                                                            <option value="Universidad Europea Miguel de Cervantes">Universidad Europea Miguel de Cervantes</option>
-                                                            <option value="Universidad Católica de Ávila">Universidad Católica de Ávila</option>
                                                         </optgroup>
 
                                                         <optgroup label="Castilla-La Mancha">
@@ -553,13 +586,7 @@
                                                             <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
                                                             <option value="Universidad Politécnica de Cataluña">Universidad Politécnica de Cataluña</option>
                                                             <option value="Universidad Pompeu Fabra">Universidad Pompeu Fabra</option>
-                                                            <option value="Universidad de Rovira i Virgili">Universidad de Rovira i Virgili</option>
-                                                            <option value="Universidad de Lleida">Universidad de Lleida</option>
-                                                            <option value="Universidad de Girona">Universidad de Girona</option>
                                                             <option value="Universidad Ramon Llull">Universidad Ramon Llull</option>
-                                                            <option value="Universidad de Vic - UCC">Universidad de Vic - UCC</option>
-                                                            <option value="Universidad Internacional de Cataluña">Universidad Internacional de Cataluña</option>
-                                                            <option value="Universidad Abat Oliba CEU">Universidad Abat Oliba CEU</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad de Madrid">
@@ -571,14 +598,7 @@
                                                             <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
                                                             <option value="Universidad CEU San Pablo">Universidad CEU San Pablo</option>
                                                             <option value="Universidad Pontificia Comillas">Universidad Pontificia Comillas</option>
-                                                            <option value="Universidad Francisco de Vitoria">Universidad Francisco de Vitoria</option>
                                                             <option value="Universidad Europea de Madrid">Universidad Europea de Madrid</option>
-                                                            <option value="Universidad Alfonso X el Sabio">Universidad Alfonso X el Sabio</option>
-                                                            <option value="Universidad Camilo José Cela">Universidad Camilo José Cela</option>
-                                                            <option value="Universidad Nebrija">Universidad Nebrija</option>
-                                                            <option value="Universidad Villanueva">Universidad Villanueva</option>
-                                                            <option value="CUNEF Universidad">CUNEF Universidad</option>
-                                                            <option value="Universidad ESIC">Universidad ESIC</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad Valenciana">
@@ -586,20 +606,17 @@
                                                             <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
                                                             <option value="Universidad de Alicante">Universidad de Alicante</option>
                                                             <option value="Universidad Jaume I">Universidad Jaume I</option>
-                                                            <option value="Universidad Miguel Hernández">Universidad Miguel Hernández</option>
-                                                            <option value="Universidad Cardenal Herrera-CEU">Universidad Cardenal Herrera-CEU</option>
-                                                            <option value="Universidad Católica de Valencia">Universidad Católica de Valencia</option>
-                                                            <option value="Universidad Internacional de Valencia (VIU)">Universidad Internacional de Valencia (VIU)</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Extremadura">
-                                                            <option value="Universidad de Extremadura">Universidad de Extremadura</option>
                                                         </optgroup>
 
                                                         <optgroup label="Galicia">
                                                             <option value="Universidad de Santiago de Compostela">Universidad de Santiago de Compostela</option>
                                                             <option value="Universidad de La Coruña">Universidad de La Coruña</option>
                                                             <option value="Universidad de Vigo">Universidad de Vigo</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="País Vasco">
+                                                            <option value="Universidad del País Vasco (UPV/EHU)">Universidad del País Vasco (UPV/EHU)</option>
+                                                            <option value="Universidad de Deusto">Universidad de Deusto</option>
                                                         </optgroup>
 
                                                         <optgroup label="Otras opciones">
@@ -715,7 +732,7 @@
                                     </div>
                                 </div>
 
-                                {/* Mis Asignaturas */}
+                                {/* Lista de Asignaturas */}
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas ({subjects.length})</h3>
                                     {subjects.length === 0 ? (
@@ -751,7 +768,7 @@
                                                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1">
                                                         <div className="flex items-center text-slate-600">
                                                             <Icon name="calendar" className="w-3.5 h-3.5 text-brand-500 mr-1.5" />
-                                                            <span>Examen: <strong>{sub.examDate !== 'Sin fecha' ? sub.examDate : 'Pendiente de definir'}</strong></span>
+                                                            <span>Examen: <strong>{sub.examDate !== 'Sin fecha' ? sub.examDate : 'Sin definir'}</strong></span>
                                                         </div>
                                                         <div className="flex items-center text-slate-500">
                                                             <Icon name="tag" className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
@@ -1014,7 +1031,7 @@
                         )}
                     </main>
 
-                    {/* MODAL CORREGIDO: Añadir Asignatura con Fechas de Examen */}
+                    {/* MODAL COMPLETAMENTE CORREGIDO Y FUNCIONAL */}
                     {showModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
@@ -1031,8 +1048,8 @@
                                         <input 
                                             type="text" 
                                             required
-                                            value={subjectForm.name}
-                                            onChange={(e) => setSubjectForm({ ...subjectForm, name: e.target.value })}
+                                            value={subjectNameInput}
+                                            onChange={(e) => setSubjectNameInput(e.target.value)}
                                             placeholder="Ej. Farmacología, Estadística, etc." 
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
                                         />
@@ -1042,8 +1059,8 @@
                                         <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Fecha del Examen</label>
                                         <input 
                                             type="date" 
-                                            value={subjectForm.examDate}
-                                            onChange={(e) => setSubjectForm({ ...subjectForm, examDate: e.target.value })}
+                                            value={subjectExamDateInput}
+                                            onChange={(e) => setSubjectExamDateInput(e.target.value)}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white"
                                         />
                                     </div>
@@ -1051,8 +1068,8 @@
                                     <div>
                                         <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Evaluación</label>
                                         <select 
-                                            value={subjectForm.examType}
-                                            onChange={(e) => setSubjectForm({ ...subjectForm, examType: e.target.value })}
+                                            value={subjectExamTypeInput}
+                                            onChange={(e) => setSubjectExamTypeInput(e.target.value)}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
                                             <option value="Examen Parcial">Examen Parcial</option>
                                             <option value="Examen Final">Examen Final</option>
@@ -1089,9 +1106,13 @@
             );
         }
 
-        // Renderizado en el DOM
+        // Renderizado seguro montado en ErrorBoundary
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(
+            <ErrorBoundary>
+                <App />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 </html>
