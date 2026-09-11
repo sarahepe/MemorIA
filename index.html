@@ -53,11 +53,15 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- Componente de Iconos Lucide ---
+        // --- Componente de Iconos Lucide con manejo seguro de errores ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
             useEffect(() => {
-                if (window.lucide) {
-                    window.lucide.createIcons();
+                try {
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                } catch (e) {
+                    console.error("Lucide icon error", e);
                 }
             }, [name]);
             return <i data-lucide={name} className={className}></i>;
@@ -71,7 +75,7 @@
             { id: 4, title: "Principios de Microeconomía", university: "Universidad de Sevilla", subject: "Economía", author: "Elena P.", questions: 3, rating: 4.2 }
         ];
 
-        // --- Cuestionario de ejemplo genérico para fallback ---
+        // --- Cuestionario de ejemplo genérico ---
         const sampleQuestions = [
             {
                 id: 1,
@@ -113,9 +117,9 @@
 
         // --- APP PRINCIPAL ---
         function App() {
-            // Estado de Usuario (Inicia en null = No autenticado)
+            // Estado de Usuario
             const [user, setUser] = useState(null);
-            const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'generator', 'community'
+            const [activeTab, setActiveTab] = useState('dashboard');
             
             // Estado de Autenticación
             const [authMode, setAuthMode] = useState('login');
@@ -128,10 +132,18 @@
                 degree: ''
             });
 
-            // Estado de Dashboard / Asignaturas
-            const [subjects, setSubjects] = useState([]); // Vacío al inicio
+            // Estado de Asignaturas (Estructura de objetos completa)
+            const [subjects, setSubjects] = useState([]); 
             const [showModal, setShowModal] = useState(false);
-            const [newSubject, setNewSubject] = useState('');
+            
+            // Formulario para añadir asignatura con fecha de examen
+            const [subjectForm, setSubjectForm] = useState({
+                name: '',
+                examDate: '',
+                examType: 'Examen Parcial'
+            });
+
+            // Estado de Carga de Apuntes
             const [notesText, setNotesText] = useState('');
             const [isExtractingPDF, setIsExtractingPDF] = useState(false);
 
@@ -152,11 +164,9 @@
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
-            // Login / Registro Submit con datos reales
+            // Login / Registro Submit
             const handleAuthSubmit = (e) => {
                 e.preventDefault();
-                
-                // Determinar la universidad final (seleccionada o ingresada manualmente)
                 let finalUniversity = formData.university;
                 if (formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') {
                     finalUniversity = formData.customUniversity.trim() || formData.university;
@@ -180,17 +190,46 @@
                 setActiveTab('dashboard');
             };
 
-            // Añadir Asignatura Real
+            // Añadir Asignatura con manejo seguro de estado
             const handleAddSubject = (e) => {
                 e.preventDefault();
-                if (newSubject.trim()) {
-                    setSubjects([...subjects, newSubject.trim()]);
-                    setNewSubject('');
-                    setShowModal(false);
-                }
+                if (!subjectForm.name.trim()) return;
+
+                const newSub = {
+                    id: Date.now(),
+                    name: subjectForm.name.trim(),
+                    examDate: subjectForm.examDate || 'Sin fecha',
+                    examType: subjectForm.examType || 'Examen'
+                };
+
+                setSubjects(prevSubjects => [...prevSubjects, newSub]);
+                setSubjectForm({ name: '', examDate: '', examType: 'Examen Parcial' });
+                setShowModal(false);
             };
 
-            // Lectura Real de Archivos PDF usando PDF.js
+            // Eliminar Asignatura
+            const handleDeleteSubject = (id) => {
+                setSubjects(subjects.filter(s => s.id !== id));
+            };
+
+            // Cálculo dinámico de días faltantes para el próximo examen más cercano
+            const getNextExamInfo = () => {
+                if (subjects.length === 0) return "Sin exámenes";
+                
+                const validExams = subjects
+                    .filter(s => s.examDate && s.examDate !== 'Sin fecha')
+                    .map(s => new Date(s.examDate))
+                    .filter(d => !isNaN(d.getTime()) && d >= new Date().setHours(0,0,0,0))
+                    .sort((a, b) => a - b);
+
+                if (validExams.length === 0) return "Sin fechas pendientes";
+
+                const diffTime = Math.abs(validExams[0] - new Date());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                return `En ${diffDays} día${diffDays === 1 ? '' : 's'}`;
+            };
+
+            // Lectura Real de PDF mediante PDF.js
             const handleFileUpload = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -228,18 +267,16 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            // Generador de Test Inteligente basándose en los apuntes cargados
+            // Generador de Test Inteligente
             const handleGenerateTest = () => {
                 if (!notesText.trim()) {
                     alert("Por favor, sube un archivo PDF o pega texto en el área de apuntes antes de generar el test.");
                     return;
                 }
 
-                // Intenta seleccionar la primera asignatura del usuario o asigna una genérica
-                const currentSub = subjects.length > 0 ? subjects[0] : 'General';
+                const currentSub = subjects.length > 0 ? subjects[0].name : 'General';
                 setCurrentSubjectName(currentSub);
 
-                // Si se detecta texto en los apuntes, generamos preguntas dinámicas derivadas del texto
                 const textLines = notesText.split('\n').filter(l => l.trim().length > 20);
                 let generatedQuestions = [];
 
@@ -292,7 +329,6 @@
                 setActiveTab('generator');
             };
 
-            // Practicar un examen público del Banco Comunitario
             const handlePracticeExam = (exam) => {
                 setCurrentSubjectName(exam.subject);
                 setCurrentTest(sampleQuestions);
@@ -301,13 +337,11 @@
                 setActiveTab('generator');
             };
 
-            // Selección de respuesta
             const handleSelectOption = (qId, optionIdx) => {
                 if (testSubmitted) return;
                 setUserAnswers({ ...userAnswers, [qId]: optionIdx });
             };
 
-            // Cálculo de nota
             const calculateScore = () => {
                 if (!currentTest) return 0;
                 let correctCount = 0;
@@ -317,7 +351,6 @@
                 return Math.round((correctCount / currentTest.length) * 10);
             };
 
-            // Si el examen se marca como público al finalizar, agregarlo a la lista comunitaria
             const handleFinishTest = () => {
                 setTestSubmitted(true);
                 if (isPublic && currentTest) {
@@ -475,7 +508,7 @@
                                                             <option value="Universidad de Granada">Universidad de Granada</option>
                                                             <option value="Universidad de Málaga">Universidad de Málaga</option>
                                                             <option value="Universidad de Córdoba">Universidad de Córdoba</option>
-                                                            <option value="Universidad de Cátiz">Universidad de Cádiz</option>
+                                                            <option value="Universidad de Cádiz">Universidad de Cádiz</option>
                                                             <option value="Universidad de Almería">Universidad de Almería</option>
                                                             <option value="Universidad de Huelva">Universidad de Huelva</option>
                                                             <option value="Universidad de Jaén">Universidad de Jaén</option>
@@ -524,7 +557,7 @@
                                                             <option value="Universidad de Lleida">Universidad de Lleida</option>
                                                             <option value="Universidad de Girona">Universidad de Girona</option>
                                                             <option value="Universidad Ramon Llull">Universidad Ramon Llull</option>
-                                                            <option value="Universidad de Vic - Universidad Central de Cataluña">Universidad de Vic - UCC</option>
+                                                            <option value="Universidad de Vic - UCC">Universidad de Vic - UCC</option>
                                                             <option value="Universidad Internacional de Cataluña">Universidad Internacional de Cataluña</option>
                                                             <option value="Universidad Abat Oliba CEU">Universidad Abat Oliba CEU</option>
                                                         </optgroup>
@@ -534,7 +567,7 @@
                                                             <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
                                                             <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
                                                             <option value="Universidad Carlos III de Madrid">Universidad Carlos III de Madrid</option>
-                                                            <option value="Universidad Alcalá">Universidad de Alcalá</option>
+                                                            <option value="Universidad de Alcalá">Universidad de Alcalá</option>
                                                             <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
                                                             <option value="Universidad CEU San Pablo">Universidad CEU San Pablo</option>
                                                             <option value="Universidad Pontificia Comillas">Universidad Pontificia Comillas</option>
@@ -544,7 +577,6 @@
                                                             <option value="Universidad Camilo José Cela">Universidad Camilo José Cela</option>
                                                             <option value="Universidad Nebrija">Universidad Nebrija</option>
                                                             <option value="Universidad Villanueva">Universidad Villanueva</option>
-                                                            <option value="Universidad Cardenal Cisneros">Universidad Cardenal Cisneros</option>
                                                             <option value="CUNEF Universidad">CUNEF Universidad</option>
                                                             <option value="Universidad ESIC">Universidad ESIC</option>
                                                         </optgroup>
@@ -556,7 +588,7 @@
                                                             <option value="Universidad Jaume I">Universidad Jaume I</option>
                                                             <option value="Universidad Miguel Hernández">Universidad Miguel Hernández</option>
                                                             <option value="Universidad Cardenal Herrera-CEU">Universidad Cardenal Herrera-CEU</option>
-                                                            <option value="Universidad Católica de Valencia San Vicente Mártir">Universidad Católica de Valencia</option>
+                                                            <option value="Universidad Católica de Valencia">Universidad Católica de Valencia</option>
                                                             <option value="Universidad Internacional de Valencia (VIU)">Universidad Internacional de Valencia (VIU)</option>
                                                         </optgroup>
 
@@ -568,39 +600,6 @@
                                                             <option value="Universidad de Santiago de Compostela">Universidad de Santiago de Compostela</option>
                                                             <option value="Universidad de La Coruña">Universidad de La Coruña</option>
                                                             <option value="Universidad de Vigo">Universidad de Vigo</option>
-                                                            <option value="Universidad Intercontinental de la Empresa">Universidad Intercontinental de la Empresa</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Islas Baleares">
-                                                            <option value="Universidad de las Islas Baleares">Universidad de las Islas Baleares</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="La Rioja">
-                                                            <option value="Universidad de La Rioja">Universidad de La Rioja</option>
-                                                            <option value="Universidad Internacional de La Rioja (UNIR)">Universidad Internacional de La Rioja (UNIR)</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Navarra">
-                                                            <option value="Universidad Pública de Navarra">Universidad Pública de Navarra</option>
-                                                            <option value="Universidad de Navarra">Universidad de Navarra</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="País Vasco">
-                                                            <option value="Universidad del País Vasco (UPV/EHU)">Universidad del País Vasco (UPV/EHU)</option>
-                                                            <option value="Universidad de Deusto">Universidad de Deusto</option>
-                                                            <option value="Mondragon Unibertsitatea">Mondragon Unibertsitatea</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Región de Murcia">
-                                                            <option value="Universidad de Murcia">Universidad de Murcia</option>
-                                                            <option value="Universidad Politécnica de Cartagena">Universidad Politécnica de Cartagena</option>
-                                                            <option value="Universidad Católica San Antonio de Murcia (UCAM)">Universidad Católica (UCAM)</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Educación a Distancia">
-                                                            <option value="UNED - Universidad Nacional de Educación a Distancia">UNED</option>
-                                                            <option value="UOC - Universitat Oberta de Catalunya">UOC</option>
-                                                            <option value="UDIMA - Universidad a Distancia de Madrid">UDIMA</option>
                                                         </optgroup>
 
                                                         <optgroup label="Otras opciones">
@@ -610,17 +609,16 @@
                                                     </select>
                                                 </div>
 
-                                                {/* CAMPO ADICIONAL SI SE SELECCIONA OTRA UNIVERSIDAD / INTERNACIONAL */}
                                                 {(formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') && (
                                                     <div>
-                                                        <label className="block text-xs font-semibold text-brand-700 uppercase mb-1">Escribe el nombre de tu Universidad</label>
+                                                        <label className="block text-xs font-semibold text-brand-700 uppercase mb-1">Nombre de tu Universidad</label>
                                                         <input 
                                                             type="text" 
                                                             name="customUniversity"
                                                             required
                                                             value={formData.customUniversity} 
                                                             onChange={handleAuthInput} 
-                                                            placeholder="Ej. Universidad de Buenos Aires, Harvard, etc." 
+                                                            placeholder="Ej. Harvard, UBA, etc." 
                                                             className="w-full px-4 py-2.5 rounded-xl border border-brand-300 bg-brand-50/40 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                                                         />
                                                     </div>
@@ -688,9 +686,9 @@
                                         </div>
                                         <div>
                                             <div className="text-2xl font-bold text-slate-800">
-                                                {subjects.length > 0 ? "En 4 días" : "Sin fecha"}
+                                                {getNextExamInfo()}
                                             </div>
-                                            <div className="text-xs text-slate-500 font-medium">Próximo Examen Parcial</div>
+                                            <div className="text-xs text-slate-500 font-medium">Próximo Examen</div>
                                         </div>
                                     </div>
 
@@ -719,7 +717,7 @@
 
                                 {/* Mis Asignaturas */}
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas</h3>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas ({subjects.length})</h3>
                                     {subjects.length === 0 ? (
                                         <div className="bg-white p-6 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
                                             <Icon name="book-open" className="w-8 h-8 mx-auto mb-2 text-slate-300" />
@@ -727,17 +725,40 @@
                                             <button 
                                                 onClick={() => setShowModal(true)} 
                                                 className="mt-3 text-xs text-brand-600 font-bold hover:underline inline-flex items-center space-x-1">
-                                                <span>Añade tu primera materia</span>
+                                                <span>Añade tu primera materia con fecha de examen</span>
                                                 <Icon name="arrow-right" className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-wrap gap-2">
-                                            {subjects.map((sub, idx) => (
-                                                <span key={idx} className="bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm shadow-sm flex items-center space-x-2">
-                                                    <Icon name="book-open" className="w-4 h-4 text-brand-500" />
-                                                    <span>{sub}</span>
-                                                </span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                            {subjects.map((sub) => (
+                                                <div key={sub.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
+                                                                <Icon name="book-open" className="w-4 h-4" />
+                                                            </div>
+                                                            <span className="font-bold text-slate-800 text-sm">{sub.name}</span>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleDeleteSubject(sub.id)}
+                                                            className="text-slate-300 hover:text-red-500 transition p-1"
+                                                            title="Eliminar materia">
+                                                            <Icon name="trash-2" className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1">
+                                                        <div className="flex items-center text-slate-600">
+                                                            <Icon name="calendar" className="w-3.5 h-3.5 text-brand-500 mr-1.5" />
+                                                            <span>Examen: <strong>{sub.examDate !== 'Sin fecha' ? sub.examDate : 'Pendiente de definir'}</strong></span>
+                                                        </div>
+                                                        <div className="flex items-center text-slate-500">
+                                                            <Icon name="tag" className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
+                                                            <span>Tipo: {sub.examType}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             ))}
                                         </div>
                                     )}
@@ -993,12 +1014,12 @@
                         )}
                     </main>
 
-                    {/* MODAL: Añadir Asignatura */}
+                    {/* MODAL CORREGIDO: Añadir Asignatura con Fechas de Examen */}
                     {showModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-slate-800">Añadir Nueva Asignatura</h3>
+                                    <h3 className="text-lg font-bold text-slate-800">Añadir Asignatura y Examen</h3>
                                     <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
                                         <Icon name="x" className="w-5 h-5" />
                                     </button>
@@ -1010,12 +1031,36 @@
                                         <input 
                                             type="text" 
                                             required
-                                            value={newSubject}
-                                            onChange={(e) => setNewSubject(e.target.value)}
+                                            value={subjectForm.name}
+                                            onChange={(e) => setSubjectForm({ ...subjectForm, name: e.target.value })}
                                             placeholder="Ej. Farmacología, Estadística, etc." 
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
                                         />
                                     </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Fecha del Examen</label>
+                                        <input 
+                                            type="date" 
+                                            value={subjectForm.examDate}
+                                            onChange={(e) => setSubjectForm({ ...subjectForm, examDate: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Evaluación</label>
+                                        <select 
+                                            value={subjectForm.examType}
+                                            onChange={(e) => setSubjectForm({ ...subjectForm, examType: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none bg-white">
+                                            <option value="Examen Parcial">Examen Parcial</option>
+                                            <option value="Examen Final">Examen Final</option>
+                                            <option value="Entrega de Práctica">Entrega de Práctica</option>
+                                            <option value="Test / Quiz">Test / Quiz</option>
+                                        </select>
+                                    </div>
+
                                     <div className="flex space-x-3 justify-end pt-2">
                                         <button 
                                             type="button" 
@@ -1026,7 +1071,7 @@
                                         <button 
                                             type="submit" 
                                             className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
-                                            Guardar
+                                            Guardar Asignatura
                                         </button>
                                     </div>
                                 </form>
