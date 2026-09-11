@@ -51,45 +51,7 @@
     <div id="root" class="flex-1 flex flex-col"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, Component } = React;
-
-        // --- LÍMITE DE ERRORES (Evita que cualquier vista rompa la web) ---
-        class ErrorBoundary extends Component {
-            constructor(props) {
-                super(props);
-                this.state = { hasError: false };
-            }
-
-            static getDerivedStateFromError(error) {
-                return { hasError: true };
-            }
-
-            componentDidCatch(error, errorInfo) {
-                console.error("Error capturado en MemorAI:", error, errorInfo);
-            }
-
-            render() {
-                if (this.state.hasError) {
-                    return (
-                        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50">
-                            <div className="bg-white p-8 rounded-2xl shadow-xl border border-red-100 max-w-md w-full space-y-4">
-                                <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-                                    <i data-lucide="alert-triangle" className="w-6 h-6"></i>
-                                </div>
-                                <h2 className="text-xl font-bold text-slate-800">Ocurrió un contratiempo</h2>
-                                <p className="text-sm text-slate-500">Se produjo un error al procesar esta vista. Puedes recargar la aplicación sin perder la sesión.</p>
-                                <button 
-                                    onClick={() => window.location.reload()} 
-                                    className="w-full py-2.5 bg-brand-600 text-white font-semibold rounded-xl text-sm hover:bg-brand-700 transition">
-                                    Reintentar / Volver a Cargar
-                                </button>
-                            </div>
-                        </div>
-                    );
-                }
-                return this.props.children;
-            }
-        }
+        const { useState, useEffect } = React;
 
         // --- Componente de Iconos Lucide ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
@@ -111,7 +73,6 @@
             { id: 4, title: "Principios de Microeconomía", university: "Universidad de Sevilla", subject: "Economía", author: "Elena P.", questions: 3, rating: 4.2 }
         ];
 
-        // --- Cuestionario de ejemplo genérico ---
         const sampleQuestions = [
             {
                 id: 1,
@@ -153,12 +114,16 @@
 
         // --- APP PRINCIPAL ---
         function App() {
-            // Estado de Usuario
+            // Base de Datos Simula Usuarios Registrados
+            const [registeredUsers, setRegisteredUsers] = useState([]);
+            
+            // Estado de Usuario Autenticado
             const [user, setUser] = useState(null);
             const [activeTab, setActiveTab] = useState('dashboard');
             
             // Estado de Autenticación
             const [authMode, setAuthMode] = useState('login');
+            const [authError, setAuthError] = useState('');
             const [formData, setFormData] = useState({
                 fullName: '',
                 email: '',
@@ -195,36 +160,61 @@
 
             // Manejo de Inputs de Auth
             const handleAuthInput = (e) => {
+                setAuthError('');
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
-            // Login / Registro Submit
+            // Login / Registro Submit con VALIDACIÓN ESTRICTA REAL
             const handleAuthSubmit = (e) => {
                 e.preventDefault();
-                let finalUniversity = formData.university;
-                if (formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') {
-                    finalUniversity = formData.customUniversity.trim() || formData.university;
-                }
+                setAuthError('');
+
+                const cleanEmail = formData.email.trim().toLowerCase();
 
                 if (authMode === 'register') {
-                    setUser({
-                        name: formData.fullName || 'Estudiante',
-                        email: formData.email,
+                    // Validar si el correo ya existe
+                    const existingUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
+                    if (existingUser) {
+                        setAuthError('Este correo electrónico ya está registrado. Utiliza otro o inicia sesión.');
+                        return;
+                    }
+
+                    let finalUniversity = formData.university;
+                    if (formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') {
+                        finalUniversity = formData.customUniversity.trim() || formData.university;
+                    }
+
+                    const newUser = {
+                        name: formData.fullName.trim() || 'Estudiante',
+                        email: cleanEmail,
+                        password: formData.password,
                         university: finalUniversity || 'Universidad No Especificada',
-                        degree: formData.degree || 'Grado Universitario'
-                    });
+                        degree: formData.degree.trim() || 'Grado Universitario'
+                    };
+
+                    setRegisteredUsers([...registeredUsers, newUser]);
+                    setUser(newUser);
+                    setActiveTab('dashboard');
                 } else {
-                    setUser({
-                        name: formData.email ? formData.email.split('@')[0] : 'Estudiante',
-                        email: formData.email,
-                        university: finalUniversity || 'Universidad Registrada',
-                        degree: 'Grado Universitario'
-                    });
+                    // Validación en inicio de sesión
+                    const foundUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
+
+                    if (!foundUser) {
+                        setAuthError('El correo electrónico no está registrado.');
+                        return;
+                    }
+
+                    if (foundUser.password !== formData.password) {
+                        setAuthError('La contraseña es incorrecta.');
+                        return;
+                    }
+
+                    setUser(foundUser);
+                    setActiveTab('dashboard');
                 }
-                setActiveTab('dashboard');
             };
 
-            // Añadir Asignatura completamente funcional y a prueba de errores
+            // Añadir Asignatura completamente funcional
             const handleAddSubject = (e) => {
                 e.preventDefault();
                 const trimmedName = subjectNameInput.trim();
@@ -254,7 +244,7 @@
                 if (!subjects || subjects.length === 0) return "Sin exámenes";
                 
                 const validExams = subjects
-                    .filter(s => s?.examDate && s.examDate !== 'Sin fecha')
+                    .filter(s => s && s.examDate && s.examDate !== 'Sin fecha')
                     .map(s => new Date(s.examDate))
                     .filter(d => !isNaN(d.getTime()) && d >= new Date().setHours(0,0,0,0))
                     .sort((a, b) => a - b);
@@ -268,7 +258,7 @@
 
             // Lectura Real de PDF mediante PDF.js
             const handleFileUpload = (e) => {
-                const file = e.target.files?.[0];
+                const file = e.target.files && e.target.files[0];
                 if (!file) return;
 
                 if (file.type !== 'application/pdf') {
@@ -475,18 +465,25 @@
                                 <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-md mx-auto">
                                     <div className="flex border-b border-slate-100">
                                         <button 
-                                            onClick={() => setAuthMode('login')}
+                                            onClick={() => { setAuthMode('login'); setAuthError(''); }}
                                             className={`flex-1 py-4 text-center font-semibold text-sm transition ${authMode === 'login' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}>
                                             Iniciar Sesión
                                         </button>
                                         <button 
-                                            onClick={() => setAuthMode('register')}
+                                            onClick={() => { setAuthMode('register'); setAuthError(''); }}
                                             className={`flex-1 py-4 text-center font-semibold text-sm transition ${authMode === 'register' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}>
                                             Registrarse
                                         </button>
                                     </div>
 
                                     <form onSubmit={handleAuthSubmit} className="p-6 space-y-4">
+                                        {authError && (
+                                            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-semibold flex items-center space-x-2">
+                                                <Icon name="alert-circle" className="w-4 h-4 flex-shrink-0" />
+                                                <span>{authError}</span>
+                                            </div>
+                                        )}
+
                                         {authMode === 'register' && (
                                             <div>
                                                 <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre Completo</label>
@@ -549,36 +546,11 @@
                                                             <option value="Universidad de Almería">Universidad de Almería</option>
                                                             <option value="Universidad de Huelva">Universidad de Huelva</option>
                                                             <option value="Universidad de Jaén">Universidad de Jaén</option>
-                                                            <option value="Universidad Internacional de Andalucía">Universidad Internacional de Andalucía</option>
                                                             <option value="Universidad Pablo de Olavide">Universidad Pablo de Olavide</option>
-                                                            <option value="Universidad Loyola Andalucía">Universidad Loyola Andalucía</option>
                                                         </optgroup>
 
                                                         <optgroup label="Aragón">
                                                             <option value="Universidad de Zaragoza">Universidad de Zaragoza</option>
-                                                            <option value="Universidad San Jorge">Universidad San Jorge</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Canarias">
-                                                            <option value="Universidad de La Laguna">Universidad de La Laguna</option>
-                                                            <option value="Universidad de Las Palmas de Gran Canaria">Universidad de Las Palmas de Gran Canaria</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Cantabria">
-                                                            <option value="Universidad de Cantabria">Universidad de Cantabria</option>
-                                                            <option value="Universidad Europea del Atlántico">Universidad Europea del Atlántico</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Castilla y León">
-                                                            <option value="Universidad de Salamanca">Universidad de Salamanca</option>
-                                                            <option value="Universidad de Valladolid">Universidad de Valladolid</option>
-                                                            <option value="Universidad de León">Universidad de León</option>
-                                                            <option value="Universidad de Burgos">Universidad de Burgos</option>
-                                                            <option value="IE University">IE University</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Castilla-La Mancha">
-                                                            <option value="Universidad de Castilla-La Mancha">Universidad de Castilla-La Mancha</option>
                                                         </optgroup>
 
                                                         <optgroup label="Cataluña">
@@ -586,7 +558,6 @@
                                                             <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
                                                             <option value="Universidad Politécnica de Cataluña">Universidad Politécnica de Cataluña</option>
                                                             <option value="Universidad Pompeu Fabra">Universidad Pompeu Fabra</option>
-                                                            <option value="Universidad Ramon Llull">Universidad Ramon Llull</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad de Madrid">
@@ -594,29 +565,13 @@
                                                             <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
                                                             <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
                                                             <option value="Universidad Carlos III de Madrid">Universidad Carlos III de Madrid</option>
-                                                            <option value="Universidad de Alcalá">Universidad de Alcalá</option>
                                                             <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
-                                                            <option value="Universidad CEU San Pablo">Universidad CEU San Pablo</option>
-                                                            <option value="Universidad Pontificia Comillas">Universidad Pontificia Comillas</option>
-                                                            <option value="Universidad Europea de Madrid">Universidad Europea de Madrid</option>
                                                         </optgroup>
 
                                                         <optgroup label="Comunidad Valenciana">
                                                             <option value="Universidad de Valencia">Universidad de Valencia</option>
                                                             <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
                                                             <option value="Universidad de Alicante">Universidad de Alicante</option>
-                                                            <option value="Universidad Jaume I">Universidad Jaume I</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="Galicia">
-                                                            <option value="Universidad de Santiago de Compostela">Universidad de Santiago de Compostela</option>
-                                                            <option value="Universidad de La Coruña">Universidad de La Coruña</option>
-                                                            <option value="Universidad de Vigo">Universidad de Vigo</option>
-                                                        </optgroup>
-
-                                                        <optgroup label="País Vasco">
-                                                            <option value="Universidad del País Vasco (UPV/EHU)">Universidad del País Vasco (UPV/EHU)</option>
-                                                            <option value="Universidad de Deusto">Universidad de Deusto</option>
                                                         </optgroup>
 
                                                         <optgroup label="Otras opciones">
@@ -669,7 +624,6 @@
                         {/* 2. PANEL DE ESTUDIANTE (DASHBOARD) */}
                         {user && activeTab === 'dashboard' && (
                             <div className="space-y-8">
-                                {/* Saludo */}
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div>
                                         <h2 className="text-2xl font-extrabold text-slate-900">¡Hola de nuevo, {user.name}! 👋</h2>
@@ -683,7 +637,6 @@
                                     </button>
                                 </div>
 
-                                {/* Métricas */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
                                         <div className="p-3 bg-brand-100 text-brand-600 rounded-xl">
@@ -732,7 +685,6 @@
                                     </div>
                                 </div>
 
-                                {/* Lista de Asignaturas */}
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas ({subjects.length})</h3>
                                     {subjects.length === 0 ? (
@@ -781,7 +733,6 @@
                                     )}
                                 </div>
 
-                                {/* Carga Real de Apuntes */}
                                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
                                     <div className="flex items-center space-x-3 mb-4">
                                         <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
@@ -844,14 +795,12 @@
                                     </div>
                                 ) : (
                                     <>
-                                        {/* Header del Examen */}
                                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                             <div>
                                                 <h2 className="text-xl font-bold text-slate-800">Simulador de Examen: {currentSubjectName}</h2>
                                                 <p className="text-xs text-slate-500">{currentTest.length} Preguntas • Generado inteligentemente</p>
                                             </div>
 
-                                            {/* Selector Examen Público/Privado */}
                                             <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-200 self-start">
                                                 <span className={`text-xs font-semibold ${!isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Privado</span>
                                                 <button 
@@ -863,7 +812,6 @@
                                             </div>
                                         </div>
 
-                                        {/* Cuestionario */}
                                         <div className="space-y-6">
                                             {currentTest.map((q, idx) => (
                                                 <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
@@ -900,7 +848,6 @@
                                                         })}
                                                     </div>
 
-                                                    {/* Explicación / Feedback */}
                                                     {testSubmitted && (
                                                         <div className="mt-3 p-4 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-purple-900 flex items-start space-x-2">
                                                             <Icon name="info" className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" />
@@ -914,7 +861,6 @@
                                             ))}
                                         </div>
 
-                                        {/* Botón Finalizar / Resultados */}
                                         {!testSubmitted ? (
                                             <button 
                                                 onClick={handleFinishTest}
@@ -929,7 +875,6 @@
                                                     Nota: {calculateScore()} / 10
                                                 </div>
                                                 
-                                                {/* Algoritmo Repetición Espaciada */}
                                                 <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center justify-center space-x-3">
                                                     <Icon name="repeat" className="w-5 h-5 text-brand-400" />
                                                     <span>
@@ -963,7 +908,6 @@
                                     <p className="text-slate-500 text-sm">Explora y practica con tests compartidos por otros estudiantes universitarios.</p>
                                 </div>
 
-                                {/* Filtros y Búsqueda */}
                                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
                                     <div className="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                                         <Icon name="search" className="w-4 h-4 text-slate-400 mr-2" />
@@ -990,7 +934,6 @@
                                     </div>
                                 </div>
 
-                                {/* Lista de Exámenes */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {publicExams
                                         .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.subject.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -1031,7 +974,7 @@
                         )}
                     </main>
 
-                    {/* MODAL COMPLETAMENTE CORREGIDO Y FUNCIONAL */}
+                    {/* MODAL CORREGIDO Y TOTALMENTE ESTABLE */}
                     {showModal && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
@@ -1106,13 +1049,9 @@
             );
         }
 
-        // Renderizado seguro montado en ErrorBoundary
+        // Renderizado
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-            <ErrorBoundary>
-                <App />
-            </ErrorBoundary>
-        );
+        root.render(<App />);
     </script>
 </body>
 </html>
