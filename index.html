@@ -1,429 +1,746 @@
-Sí. Hay que elevar los datos del formulario de autenticación al estado principal de React y después utilizar ese estado en el dashboard.
-
- ### 1\. Sustituye el inicio de `App()` por este
-
-```
-function App() {
-  const [view, setView] = useState("auth");
-  const [authMode, setAuthMode] = useState("login");
-
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    university: "",
-    degree: ""
-  });
-
-  const [subjects, setSubjects] = useState(initialSubjects);
-  const [showSubjectModal, setShowSubjectModal] = useState(false);
-  const [newSubject, setNewSubject] = useState("");
-  const [notes, setNotes] = useState("");
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [testQuestions, setTestQuestions] = useState(questions);
-  const [testIndex, setTestIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [testFinished, setTestFinished] = useState(false);
-  const [visibility, setVisibility] = useState("Privado");
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [communitySearch, setCommunitySearch] = useState("");
-  const [communityUniversity, setCommunityUniversity] = useState("Todas");
-  const [communitySubject, setCommunitySubject] = useState("Todas");
-  const [activeCommunityExam, setActiveCommunityExam] = useState(null);
-
-  const fileInputRef = useRef(null);
-
-  const filteredExams = useMemo(() => {
-    return communityExams.filter((exam) => {
-      const text = `${exam.title} ${exam.author} ${exam.subject}`.toLowerCase();
-
-      const matchesSearch = text.includes(
-        communitySearch.toLowerCase()
-      );
-
-      const matchesUniversity =
-        communityUniversity === "Todas" ||
-        exam.university === communityUniversity;
-
-      const matchesSubject =
-        communitySubject === "Todas" ||
-        exam.subject === communitySubject;
-
-      return (
-        matchesSearch &&
-        matchesUniversity &&
-        matchesSubject
-      );
-    });
-  }, [
-    communitySearch,
-    communityUniversity,
-    communitySubject
-  ]);
-
-  const resetTest = (customQuestions = questions) => {
-    setTestQuestions(customQuestions);
-    setTestIndex(0);
-    setAnswers({});
-    setSelectedAnswer(null);
-    setTestFinished(false);
-  };
-
-  const startTest = (customQuestions = questions) => {
-    resetTest(customQuestions);
-    setView("test");
-  };
-
-  const handleAnswer = (index) => {
-    if (selectedAnswer !== null || testFinished) return;
-
-    setSelectedAnswer(index);
-
-    setAnswers((prev) => ({
-      ...prev,
-      [testIndex]: index
-    }));
-  };
-
-  const nextQuestion = () => {
-    if (testIndex < testQuestions.length - 1) {
-      setTestIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-    } else {
-      setTestFinished(true);
-    }
-  };
-
-  const score = Object.entries(answers).reduce(
-    (total, [questionIndex, answer]) => {
-      return (
-        total +
-        (answer === testQuestions[questionIndex].answer
-          ? 1
-          : 0)
-      );
-    },
-    0
-  );
-
-  const addSubject = () => {
-    if (!newSubject.trim()) return;
-
-    const colors = [
-      "violet",
-      "fuchsia",
-      "indigo",
-      "purple"
-    ];
-
-    setSubjects((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: newSubject.trim(),
-        progress: 0,
-        color: colors[prev.length % colors.length],
-        cards: 0
-      }
-    ]);
-
-    setNewSubject("");
-    setShowSubjectModal(false);
-  };
-
-  const handleFile = (file) => {
-    if (!file) return;
-
-    if (
-      file.type === "application/pdf" ||
-      file.name.toLowerCase().endsWith(".pdf")
-    ) {
-      setUploadedFile(file);
-    } else {
-      alert("Por favor, selecciona un archivo PDF.");
-    }
-  };
-
-  const onDrop = (event) => {
-    event.preventDefault();
-    setDragging(false);
-
-    const file = event.dataTransfer.files?.[0];
-
-    handleFile(file);
-  };
-
-  /*
-   * Aquí capturamos los datos reales introducidos
-   * por el usuario en el formulario.
-   */
-  const handleAuthSubmit = (event, formData) => {
-    event.preventDefault();
-
-    setUser({
-      name: formData.name,
-      email: formData.email,
-      university: formData.university,
-      degree: formData.degree
-    });
-
-    setView("dashboard");
-  };
-
-  const navigation = [
-    {
-      id: "dashboard",
-      label: "Inicio",
-      icon: "home"
-    },
-    {
-      id: "test",
-      label: "Simulador",
-      icon: "chart"
-    },
-    {
-      id: "community",
-      label: "Banco comunitario",
-      icon: "users"
-    }
-  ];
-
-  if (view === "auth") {
-    return (
-      <AuthScreen
-        authMode={authMode}
-        setAuthMode={setAuthMode}
-        onSubmit={handleAuthSubmit}
-      />
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#faf9ff]">
-
-      {/* ... resto del header exactamente igual ... */}
-
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
-        {view === "dashboard" && (
-          <Dashboard
-            user={user}
-            subjects={subjects}
-            setShowSubjectModal={setShowSubjectModal}
-            notes={notes}
-            setNotes={setNotes}
-            uploadedFile={uploadedFile}
-            setUploadedFile={setUploadedFile}
-            dragging={dragging}
-            setDragging={setDragging}
-            onDrop={onDrop}
-            fileInputRef={fileInputRef}
-            handleFile={handleFile}
-            startTest={startTest}
-          />
-        )}
-
-        {view === "test" && (
-          <TestSimulator
-            questions={testQuestions}
-            testIndex={testIndex}
-            selectedAnswer={selectedAnswer}
-            answers={answers}
-            testFinished={testFinished}
-            score={score}
-            visibility={visibility}
-            setVisibility={setVisibility}
-            handleAnswer={handleAnswer}
-            nextQuestion={nextQuestion}
-            startTest={startTest}
-            setView={setView}
-          />
-        )}
-
-        {view === "community" && (
-          <Community
-            search={communitySearch}
-            setSearch={setCommunitySearch}
-            university={communityUniversity}
-            setUniversity={setCommunityUniversity}
-            subject={communitySubject}
-            setSubject={setCommunitySubject}
-            exams={filteredExams}
-            startTest={startTest}
-            activeExam={activeCommunityExam}
-            setActiveExam={setActiveCommunityExam}
-          />
-        )}
-
-      </main>
-
-      {showSubjectModal && (
-        <SubjectModal
-          value={newSubject}
-          setValue={setNewSubject}
-          onClose={() => setShowSubjectModal(false)}
-          onAdd={addSubject}
-        />
-      )}
-    </div>
-  );
-}
-```
-
- ### 2\. Sustituye `AuthScreen` por esta versión
-
- La diferencia importante es que ahora el formulario mantiene sus propios valores y los envía a `App` al registrarse o iniciar sesión.
-
- AuthScreen actualizada
-
-```
-function AuthScreen({ authMode, setAuthMode, onSubmit }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    university: "",
-    degree: ""
-  });
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((prev
-```
-
- ### 3\. Actualiza también `InputField`
-
- Añade `name`, `value` y `onChange` para que los campos estén conectados al estado:
-
-```
-function InputField({
-  icon,
-  label,
-  name,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-bold text-slate-600">
-        {label}
-      </span>
-
-      <div className="relative">
-        <Icon
-          name={icon}
-          size={17}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-        />
-
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          required={required}
-          placeholder={placeholder}
-          className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-        />
-      </div>
-    </label>
-  );
-}
-```
-
- ### 4\. Modifica `Dashboard` para recibir `user`
-
- Cambia la firma:
-
-```
-function Dashboard({
-  user,
-  subjects,
-  setShowSubjectModal,
-  notes,
-  setNotes,
-  uploadedFile,
-  setUploadedFile,
-  dragging,
-  setDragging,
-  onDrop,
-  fileInputRef,
-  handleFile,
-  startTest
-}) {
-```
-
- Y sustituye:
-
-```
-Buenos días, María
-```
-
- por:
-
-```
-Buenos días, {user.name || "estudiante"}
-```
-
- También puedes mostrar los datos reales del usuario en el dashboard. Por ejemplo, debajo del saludo:
-
-```
-<div className="mt-2 flex flex-wrap gap-2">
-  {user.university && (
-    <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-      {user.university}
-    </span>
-  )}
-
-  {user.degree && (
-    <span className="rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-semibold text-fuchsia-700">
-      {user.degree}
-    </span>
-  )}
-</div>
-```
-
- Y en el encabezado, reemplaza:
-
-```
-<div className="text-sm font-bold text-slate-800">
-  María García
-</div>
-<div className="text-xs text-slate-400">
-  Estudiante
-</div>
-```
-
- por:
-
-```
-<div className="text-sm font-bold text-slate-800">
-  {user.name || "Estudiante"}
-</div>
-
-<div className="max-w-[180px] truncate text-xs text-slate-400">
-  {user.degree || "Estudiante"}
-</div>
-```
-
- Finalmente, el avatar puede utilizar automáticamente las iniciales del nombre:
-
-```
-<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-bold text-white shadow-md">
-  {user.name
-    ? user.name
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0].toUpperCase())
-        .join("")
-    : "ES"}
-</div>
-```
-
- Con estos cambios, si alguien se registra, por ejemplo, como **"Juan Pérez"**, con su universidad y carrera, React guarda esos valores en `user` y todas las partes de la interfaz que usan `user.name`, `user.university` y `user.degree` mostrarán esos datos en lugar de los valores ficticios de María.
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemorAI: Tu Aula Inteligente</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <div id="root" class="flex-1 flex flex-col"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Componente de Iconos Wrapper para Lucide ---
+        const Icon = ({ name, className = "w-5 h-5" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} class={className}></i>;
+        };
+
+        // --- Datos Simulados Iniciales ---
+        const initialPublicExams = [
+            { id: 1, title: "Anatomía Humana - Sistema Nervioso", university: "Universidad Complutense de Madrid", subject: "Anatomía", author: "Laura M.", questions: 15, rating: 4.8 },
+            { id: 2, title: "Derecho Civil: Contratos", university: "Universidad de Barcelona", subject: "Derecho Civil", author: "Carlos R.", questions: 10, rating: 4.5 },
+            { id: 3, title: "Cálculo Multivariable - Parcial 1", university: "Universidad Politécnica de Valencia", subject: "Matemáticas", author: "Alex G.", questions: 12, rating: 4.9 },
+            { id: 4, title: "Principios de Microeconomía", university: "Universidad de Sevilla", subject: "Economía", author: "Elena P.", questions: 20, rating: 4.2 }
+        ];
+
+        const sampleQuestions = [
+            {
+                id: 1,
+                question: "¿Cuál es la función principal de la vaina de mielina en las neuronas?",
+                options: [
+                    "Sintetizar neurotransmisores en el soma",
+                    "Aumentar la velocidad de transmisión del impulso eléctrico",
+                    "Proteger al núcleo de toxinas externas",
+                    "Conectar las dendritas directamente con los músculos"
+                ],
+                correct: 1,
+                explanation: "La vaina de mielina actúa como un aislante eléctrico que permite que los impulsos eléctricos se transmitan de manera rápida y eficiente a lo largo de los axones."
+            },
+            {
+                id: 2,
+                question: "¿Qué estructura cerebral es fundamental para el proceso de consolidación de la memoria?",
+                options: [
+                    "Cerebelo",
+                    "Corteza Motora",
+                    "Hipocampo",
+                    "Lóbulo Occipital"
+                ],
+                correct: 2,
+                explanation: "El hipocampo es una estructura clave en el sistema límbico que desempeña un papel esencial en la formación de nuevas memorias episódicas y espaciales."
+            },
+            {
+                id: 3,
+                question: "En el contexto de la repetición espaciada, ¿qué ocurre con la curva del olvido al repasar?",
+                options: [
+                    "Se vuelve más pronunciada",
+                    "Se aplana, haciendo que la información dure más tiempo",
+                    "Inicia desde cero sin ningún cambio",
+                    "Desaparece por completo al primer intento"
+                ],
+                correct: 1,
+                explanation: "Cada repaso estratégico 'aplana' la curva del olvido, haciendo que la tasa de pérdida de memoria sea significativamente más lenta con el tiempo."
+            }
+        ];
+
+        // --- APP PRINCIPAL ---
+        function App() {
+            // Estado Global
+            const [user, setUser] = useState(null); // null = No autenticado
+            const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'generator', 'community'
+            
+            // Estado de Registro / Login
+            const [authMode, setAuthMode] = useState('login'); // 'login' o 'register'
+            const [formData, setFormData] = useState({
+                fullName: '',
+                email: '',
+                password: '',
+                university: '',
+                degree: ''
+            });
+
+            // Estado de Dashboard
+            const [subjects, setSubjects] = useState(['Neurociencia', 'Derecho Mercantil', 'Estadística']);
+            const [showModal, setShowModal] = useState(false);
+            const [newSubject, setNewSubject] = useState('');
+            const [notesText, setNotesText] = useState('');
+
+            // Estado del Examen / Test
+            const [currentTest, setCurrentTest] = useState(null);
+            const [isPublic, setIsPublic] = useState(false);
+            const [userAnswers, setUserAnswers] = useState({});
+            const [testSubmitted, setTestSubmitted] = useState(false);
+
+            // Estado de Comunidad
+            const [publicExams, setPublicExams] = useState(initialPublicExams);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [filterUniversity, setFilterUniversity] = useState('');
+
+            // Manejar Cambios de Inputs de Auth
+            const handleAuthInput = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
+
+            // Login / Registro Submit
+            const handleAuthSubmit = (e) => {
+                e.preventDefault();
+                if (authMode === 'register') {
+                    setUser({
+                        name: formData.fullName || 'Estudiante',
+                        email: formData.email,
+                        university: formData.university || 'Universidad General',
+                        degree: formData.degree || 'Grado Universitario'
+                    });
+                } else {
+                    setUser({
+                        name: 'Ana García',
+                        email: formData.email || 'ana.garcia@estudiante.edu',
+                        university: 'Universidad Complutense de Madrid',
+                        degree: 'Ingeniería Software'
+                    });
+                }
+                setActiveTab('dashboard');
+            };
+
+            // Añadir Asignatura
+            const handleAddSubject = (e) => {
+                e.preventDefault();
+                if (newSubject.trim()) {
+                    setSubjects([...subjects, newSubject.trim()]);
+                    setNewSubject('');
+                    setShowModal(false);
+                }
+            };
+
+            // Iniciar Generador de Test con IA
+            const handleGenerateTest = () => {
+                if (!notesText.trim()) {
+                    alert("Por favor, pega algunos apuntes antes de generar el test.");
+                    return;
+                }
+                setCurrentTest(sampleQuestions);
+                setUserAnswers({});
+                setTestSubmitted(false);
+                setActiveTab('generator');
+            };
+
+            // Cargar Test desde la Comunidad
+            const handlePracticeExam = (exam) => {
+                setCurrentTest(sampleQuestions);
+                setUserAnswers({});
+                setTestSubmitted(false);
+                setActiveTab('generator');
+            };
+
+            // Manejar selección de respuestas
+            const handleSelectOption = (qId, optionIdx) => {
+                if (testSubmitted) return;
+                setUserAnswers({ ...userAnswers, [qId]: optionIdx });
+            };
+
+            // Calcular Resultados
+            const calculateScore = () => {
+                let correctCount = 0;
+                sampleQuestions.forEach(q => {
+                    if (userAnswers[q.id] === q.correct) correctCount++;
+                });
+                return Math.round((correctCount / sampleQuestions.length) * 10);
+            };
+
+            return (
+                <div className="flex-1 flex flex-col min-h-screen">
+                    {/* NAV BAR */}
+                    <nav className="bg-white border-b border-purple-100 sticky top-0 z-40 shadow-sm">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between h-16 items-center">
+                                <div className="flex items-[#6d28d9] items-center space-x-2 font-bold text-xl cursor-pointer" onClick={() => user && setActiveTab('dashboard')}>
+                                    <div className="bg-brand-600 text-white p-2 rounded-xl flex items-center justify-center">
+                                        <Icon name="brain" className="w-6 h-6 text-white" />
+                                    </div>
+                                    <span className="text-brand-900 tracking-tight">Memor<span className="text-brand-600">AI</span></span>
+                                </div>
+
+                                {user && (
+                                    <div className="flex items-center space-x-1 sm:space-x-4">
+                                        <button 
+                                            onClick={() => setActiveTab('dashboard')}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'dashboard' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
+                                            Panel
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab('generator')}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'generator' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
+                                            Generador / Test
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab('community')}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'community' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:text-brand-600'}`}>
+                                            Comunidad
+                                        </button>
+                                        
+                                        <div className="pl-4 border-l border-slate-200 flex items-center space-x-3">
+                                            <div className="hidden md:block text-right">
+                                                <div className="text-xs font-bold text-slate-800">{user.name}</div>
+                                                <div className="text-xs text-slate-500">{user.degree}</div>
+                                            </div>
+                                            <button 
+                                                onClick={() => setUser(null)}
+                                                className="p-2 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition"
+                                                title="Cerrar Sesión">
+                                                <Icon name="log-out" className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* VISTAS CONTENIDO */}
+                    <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+                        
+                        {/* 1. AUTENTICACIÓN / LANDING */}
+                        {!user && (
+                            <div className="py-8 max-w-4xl mx-auto">
+                                <div className="text-center mb-10">
+                                    <div className="inline-flex items-center space-x-2 bg-brand-50 text-brand-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 border border-brand-200">
+                                        <Icon name="sparkles" className="w-4 h-4 text-brand-600" />
+                                        <span>Potenciado con Repetición Espaciada e IA</span>
+                                    </div>
+                                    <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                                        Memor<span className="text-brand-600">AI</span>: Tu Aula Inteligente
+                                    </h1>
+                                    <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                                        Domina cualquier examen universitario. Sube tus apuntes, genera tests interactivos al instante y optimiza tu retención con algoritmos de repaso inteligente.
+                                    </p>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-w-md mx-auto">
+                                    <div className="flex border-b border-slate-100">
+                                        <button 
+                                            onClick={() => setAuthMode('login')}
+                                            className={`flex-1 py-4 text-center font-semibold text-sm transition ${authMode === 'login' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}>
+                                            Iniciar Sesión
+                                        </button>
+                                        <button 
+                                            onClick={() => setAuthMode('register')}
+                                            className={`flex-1 py-4 text-center font-semibold text-sm transition ${authMode === 'register' ? 'bg-white text-brand-600 border-b-2 border-brand-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}>
+                                            Registrarse
+                                        </button>
+                                    </div>
+
+                                    <form onSubmit={handleAuthSubmit} className="p-6 space-y-4">
+                                        {authMode === 'register' && (
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre Completo</label>
+                                                <input 
+                                                    type="text" 
+                                                    name="fullName"
+                                                    required
+                                                    value={formData.fullName} 
+                                                    onChange={handleAuthInput} 
+                                                    placeholder="Ej. María García" 
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
+                                            <input 
+                                                type="email" 
+                                                name="email"
+                                                required
+                                                value={formData.email} 
+                                                onChange={handleAuthInput} 
+                                                placeholder="tu.email@universidad.edu" 
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
+                                            <input 
+                                                type="password" 
+                                                name="password"
+                                                required
+                                                value={formData.password} 
+                                                onChange={handleAuthInput} 
+                                                placeholder="••••••••" 
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                            />
+                                        </div>
+
+                                        {authMode === 'register' && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Universidad</label>
+                                                    <select 
+                                                        name="university"
+                                                        value={formData.university}
+                                                        onChange={handleAuthInput}
+                                                        required
+                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white">
+                                                        <option value="">Selecciona tu universidad</option>
+                                                        <option value="Universidad Complutense de Madrid">U. Complutense de Madrid</option>
+                                                        <option value="Universidad de Barcelona">U. de Barcelona</option>
+                                                        <option value="Universidad Politécnica de Valencia">U. Politécnica de Valencia</option>
+                                                        <option value="Universidad de Sevilla">U. de Sevilla</option>
+                                                        <option value="Otra Universidad">Otra / Internacional</option>
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Carrera / Grado</label>
+                                                    <input 
+                                                        type="text" 
+                                                        name="degree"
+                                                        required
+                                                        value={formData.degree} 
+                                                        onChange={handleAuthInput} 
+                                                        placeholder="Ej. Medicina, Medicina, Derecho, etc." 
+                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+
+                                        <button 
+                                            type="submit" 
+                                            className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/30 transition duration-200 text-sm mt-2">
+                                            {authMode === 'login' ? 'Acceder a mi Aula' : 'Crear mi Cuenta'}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 2. PANEL DE ESTUDIANTE (DASHBOARD) */}
+                        {user && activeTab === 'dashboard' && (
+                            <div className="space-y-8">
+                                {/* Saludo */}
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-2xl font-extrabold text-slate-900">¡Hola de nuevo, {user.name}! 👋</h2>
+                                        <p className="text-slate-500 text-sm">{user.degree} • {user.university}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowModal(true)}
+                                        className="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-brand-500/20 text-sm transition self-start">
+                                        <Icon name="plus" className="w-4 h-4" />
+                                        <span>Añadir Asignatura</span>
+                                    </button>
+                                </div>
+
+                                {/* Métricas */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                        <div className="p-3 bg-brand-100 text-brand-600 rounded-xl">
+                                            <Icon name="trending-up" className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <div className="text-2xl font-bold text-slate-800">84%</div>
+                                            <div className="text-xs text-slate-500 font-medium">Nivel de Dominio Global</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                        <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
+                                            <Icon name="calendar" className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <div className="text-2xl font-bold text-slate-800">En 4 días</div>
+                                            <div className="text-xs text-slate-500 font-medium">Próximo Examen Parcial</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                        <div className="p-3 bg-orange-100 text-orange-600 rounded-xl">
+                                            <Icon name="flame" className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <div className="text-2xl font-bold text-slate-800">12 Días</div>
+                                            <div className="text-xs text-slate-500 font-medium">Racha de Estudio</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                                        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+                                            <Icon name="clock" className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <div className="text-2xl font-bold text-slate-800">18 Preg.</div>
+                                            <div className="text-xs text-slate-500 font-medium">Repasos Pendientes Hoy</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Asignaturas */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {subjects.map((sub, idx) => (
+                                            <span key={idx} className="bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm shadow-sm flex items-center space-x-2">
+                                                <Icon name="book-open" className="w-4 h-4 text-brand-500" />
+                                                <span>{sub}</span>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Área Carga de Apuntes */}
+                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
+                                    <div className="flex items-center space-x-3 mb-4">
+                                        <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
+                                            <Icon name="file-text" className="w-5 h-5" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-800">Generar Examen con IA desde Apuntes</h3>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="border-2 border-dashed border-purple-200 rounded-2xl p-6 text-center hover:border-brand-400 transition bg-purple-50/30">
+                                            <Icon name="upload-cloud" className="w-10 h-10 text-brand-500 mx-auto mb-2" />
+                                            <p className="text-sm font-semibold text-slate-700">Arrastra un archivo PDF con tus temas</p>
+                                            <p className="text-xs text-slate-400 mb-3">O escribe/pega tus textos directamente abajo</p>
+                                            <input type="file" className="hidden" id="file-upload" />
+                                            <label htmlFor="file-upload" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm inline-block">
+                                                Explorar archivos
+                                            </label>
+                                        </div>
+
+                                        <textarea 
+                                            rows="4" 
+                                            value={notesText}
+                                            onChange={(e) => setNotesText(e.target.value)}
+                                            placeholder="Pega aquí el contenido de tus apuntes (ej. Resumen del Tema 1 de Neurociencia)..." 
+                                            className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm outline-none">
+                                        </textarea>
+
+                                        <button 
+                                            onClick={handleGenerateTest}
+                                            className="w-full sm:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center space-x-2 text-sm">
+                                            <Icon name="sparkles" className="w-4 h-4" />
+                                            <span>Generar Test con IA</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. GENERADOR Y SIMULADOR DE TEST */}
+                        {user && activeTab === 'generator' && (
+                            <div className="max-w-3xl mx-auto space-y-6">
+                                {!currentTest ? (
+                                    <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center shadow-sm">
+                                        <Icon name="help-circle" className="w-12 h-12 text-brand-400 mx-auto mb-3" />
+                                        <h3 className="text-xl font-bold text-slate-800 mb-2">No hay ningún test activo</h3>
+                                        <p className="text-slate-500 text-sm mb-6">Genera uno desde el Panel de Control con tus apuntes o explora el Banco Comunitario.</p>
+                                        <button 
+                                            onClick={() => setActiveTab('dashboard')}
+                                            className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold shadow">
+                                            Ir al Panel de Control
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Header del Examen */}
+                                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <div>
+                                                <h2 className="text-xl font-bold text-slate-800">Simulador de Examen: Neurociencia</h2>
+                                                <p className="text-xs text-slate-500">3 Preguntas • Basado en tus apuntes</p>
+                                            </div>
+
+                                            {/* Toggle Público/Privado */}
+                                            <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-200 self-start">
+                                                <span className={`text-xs font-semibold ${!isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Privado</span>
+                                                <button 
+                                                    onClick={() => setIsPublic(!isPublic)}
+                                                    className={`w-12 h-6 flex items-center rounded-full p-1 transition duration-300 ${isPublic ? 'bg-brand-600 justify-end' : 'bg-slate-300 justify-start'}`}>
+                                                    <div className="bg-white w-4 h-4 rounded-full shadow-md"></div>
+                                                </button>
+                                                <span className={`text-xs font-semibold ${isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Público</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Cuestionario */}
+                                        <div className="space-y-6">
+                                            {currentTest.map((q, idx) => (
+                                                <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <h3 className="font-bold text-slate-800 text-base">
+                                                            <span className="text-brand-600 mr-2">{idx + 1}.</span> 
+                                                            {q.question}
+                                                        </h3>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        {q.options.map((opt, oIdx) => {
+                                                            const isSelected = userAnswers[q.id] === oIdx;
+                                                            let btnStyle = "border-slate-200 hover:border-brand-300 bg-slate-50/50";
+
+                                                            if (testSubmitted) {
+                                                                if (oIdx === q.correct) {
+                                                                    btnStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold";
+                                                                } else if (isSelected && oIdx !== q.correct) {
+                                                                    btnStyle = "border-red-500 bg-red-50 text-red-800";
+                                                                }
+                                                            } else if (isSelected) {
+                                                                btnStyle = "border-brand-600 bg-brand-50 text-brand-900 font-semibold";
+                                                            }
+
+                                                            return (
+                                                                <button
+                                                                    key={oIdx}
+                                                                    onClick={() => handleSelectOption(q.id, oIdx)}
+                                                                    className={`w-full text-left p-3.5 rounded-xl border text-sm transition flex items-center justify-between ${btnStyle}`}>
+                                                                    <span>{opt}</span>
+                                                                    {testSubmitted && oIdx === q.correct && <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />}
+                                                                    {testSubmitted && isSelected && oIdx !== q.correct && <Icon name="x-circle" className="w-5 h-5 text-red-500" />}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {/* Explicación / Feedback */}
+                                                    {testSubmitted && (
+                                                        <div className="mt-3 p-4 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-purple-900 flex items-start space-x-2">
+                                                            <Icon name="info" className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" />
+                                                            <div>
+                                                                <span className="font-bold">Explicación: </span>
+                                                                {q.explanation}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Botón Finalizar / Resultados */}
+                                        {!testSubmitted ? (
+                                            <button 
+                                                onClick={() => setTestSubmitted(true)}
+                                                disabled={Object.keys(userAnswers).length < sampleQuestions.length}
+                                                className={`w-full py-3.5 rounded-xl text-white font-semibold shadow-lg text-sm transition ${Object.keys(userAnswers).length < sampleQuestions.length ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20'}`}>
+                                                Finalizar y Ver Resultados
+                                            </button>
+                                        ) : (
+                                            <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl text-center space-y-4">
+                                                <h3 className="text-lg font-bold text-slate-200">¡Examen Completado!</h3>
+                                                <div className="text-4xl font-black text-brand-400">
+                                                    Nota: {calculateScore()} / 10
+                                                </div>
+                                                
+                                                {/* Algoritmo de Repetición Espaciada */}
+                                                <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center justify-center space-x-3">
+                                                    <Icon name="repeat" className="w-5 h-5 text-brand-400" />
+                                                    <span>
+                                                        Próximo repaso recomendado: <strong className="text-white">En 3 días (Repetición Espaciada)</strong>
+                                                    </span>
+                                                </div>
+
+                                                <button 
+                                                    onClick={() => setActiveTab('dashboard')}
+                                                    className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-sm font-semibold transition">
+                                                    Volver al Panel
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 4. BANCO COMUNITARIO DE EXÁMENES */}
+                        {user && activeTab === 'community' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-2xl font-extrabold text-slate-900">Banco Comunitario de Exámenes</h2>
+                                    <p className="text-slate-500 text-sm">Explora y practica con tests creados por otros estudiantes de distintas universidades.</p>
+                                </div>
+
+                                {/* Filtros y Búsqueda */}
+                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                                        <Icon name="search" className="w-4 h-4 text-slate-400 mr-2" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Buscar por asignatura o tema..." 
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="bg-transparent text-sm w-full outline-none"
+                                        />
+                                    </div>
+
+                                    <div className="w-full md:w-64">
+                                        <select 
+                                            value={filterUniversity}
+                                            onChange={(e) => setFilterUniversity(e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 outline-none">
+                                            <option value="">Todas las Universidades</option>
+                                            <option value="Universidad Complutense de Madrid">U. Complutense de Madrid</option>
+                                            <option value="Universidad de Barcelona">U. de Barcelona</option>
+                                            <option value="Universidad Politécnica de Valencia">U. Politécnica de Valencia</option>
+                                            <option value="Universidad de Sevilla">U. de Sevilla</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Lista de Exámenes Públicos */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {publicExams
+                                        .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.subject.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .filter(item => filterUniversity === '' || item.university === filterUniversity)
+                                        .map((exam) => (
+                                            <div key={exam.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:border-brand-300 transition">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className="text-xs font-semibold px-2.5 py-1 bg-brand-50 text-brand-700 rounded-md">
+                                                            {exam.subject}
+                                                        </span>
+                                                        <div className="flex items-center text-amber-500 text-xs font-bold space-x-1">
+                                                            <Icon name="star" className="w-3.5 h-3.5 fill-amber-400" />
+                                                            <span>{exam.rating}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <h3 className="font-bold text-slate-800 text-base mb-1">{exam.title}</h3>
+                                                    <p className="text-xs text-slate-500 mb-4">{exam.university} • Creado por {exam.author}</p>
+                                                </div>
+
+                                                <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
+                                                    <span className="text-xs font-medium text-slate-400 flex items-center">
+                                                        <Icon name="help-circle" className="w-3.5 h-3.5 mr-1" />
+                                                        {exam.questions} preguntas
+                                                    </span>
+                                                    <button 
+                                                        onClick={() => handlePracticeExam(exam)}
+                                                        className="px-4 py-2 bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 text-xs font-bold rounded-xl transition flex items-center space-x-1">
+                                                        <span>Practicar ahora</span>
+                                                        <Icon name="arrow-right" className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* MODAL: Añadir Asignatura */}
+                    {showModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-lg font-bold text-slate-800">Añadir Nueva Asignatura</h3>
+                                    <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <Icon name="x" className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleAddSubject} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre de la Materia</label>
+                                        <input 
+                                            type="text" 
+                                            required
+                                            value={newSubject}
+                                            onChange={(e) => setNewSubject(e.target.value)}
+                                            placeholder="Ej. Farmacología General" 
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex space-x-3 justify-end pt-2">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowModal(false)}
+                                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                                            Cancelar
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
+                                            Añadir Asignatura
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* FOOTER */}
+                    <footer className="bg-white border-t border-slate-100 py-6 mt-12">
+                        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+                            MemorAI © 2026 — Tu Aula Inteligente con Repetición Espaciada e IA.
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Renderizado en el DOM
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
