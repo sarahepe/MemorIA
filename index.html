@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MemorAI: Tu Aula Inteligente</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -30,12 +30,18 @@
         }
     </script>
 
-    <!-- React & ReactDOM -->
+    <!-- React & ReactDOM CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
     <!-- Babel para JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- PDF.js para lectura real de archivos PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -47,40 +53,41 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- Componente de Iconos Wrapper para Lucide ---
+        // --- Componente de Iconos Lucide ---
         const Icon = ({ name, className = "w-5 h-5" }) => {
             useEffect(() => {
                 if (window.lucide) {
                     window.lucide.createIcons();
                 }
             }, [name]);
-            return <i data-lucide={name} class={className}></i>;
+            return <i data-lucide={name} className={className}></i>;
         };
 
-        // --- Datos Simulados Iniciales ---
+        // --- Datos Iniciales Simulados para la Comunidad ---
         const initialPublicExams = [
-            { id: 1, title: "Anatomía Humana - Sistema Nervioso", university: "Universidad Complutense de Madrid", subject: "Anatomía", author: "Laura M.", questions: 15, rating: 4.8 },
-            { id: 2, title: "Derecho Civil: Contratos", university: "Universidad de Barcelona", subject: "Derecho Civil", author: "Carlos R.", questions: 10, rating: 4.5 },
-            { id: 3, title: "Cálculo Multivariable - Parcial 1", university: "Universidad Politécnica de Valencia", subject: "Matemáticas", author: "Alex G.", questions: 12, rating: 4.9 },
-            { id: 4, title: "Principios de Microeconomía", university: "Universidad de Sevilla", subject: "Economía", author: "Elena P.", questions: 20, rating: 4.2 }
+            { id: 1, title: "Anatomía Humana - Sistema Nervioso", university: "Universidad Complutense de Madrid", subject: "Anatomía", author: "Laura M.", questions: 3, rating: 4.8 },
+            { id: 2, title: "Derecho Civil: Contratos y Obligaciones", university: "Universidad de Barcelona", subject: "Derecho Civil", author: "Carlos R.", questions: 3, rating: 4.5 },
+            { id: 3, title: "Cálculo Multivariable - Parcial 1", university: "Universidad Politécnica de Valencia", subject: "Matemáticas", author: "Alex G.", questions: 3, rating: 4.9 },
+            { id: 4, title: "Principios de Microeconomía", university: "Universidad de Sevilla", subject: "Economía", author: "Elena P.", questions: 3, rating: 4.2 }
         ];
 
+        // --- Cuestionario de ejemplo genérico para fallback ---
         const sampleQuestions = [
             {
                 id: 1,
-                question: "¿Cuál es la función principal de la vaina de mielina en las neuronas?",
+                question: "¿Cuál es la función principal de la repetición espaciada en el aprendizaje?",
                 options: [
-                    "Sintetizar neurotransmisores en el soma",
-                    "Aumentar la velocidad de transmisión del impulso eléctrico",
-                    "Proteger al núcleo de toxinas externas",
-                    "Conectar las dendritas directamente con los músculos"
+                    "Sintetizar grandes volúmenes de texto de forma automática",
+                    "Aplanar la curva del olvido repasando en intervalos óptimos",
+                    "Sustituir la lectura comprensiva por memorización pasiva",
+                    "Eliminar la necesidad de realizar evaluaciones periódicas"
                 ],
                 correct: 1,
-                explanation: "La vaina de mielina actúa como un aislante eléctrico que permite que los impulsos eléctricos se transmitan de manera rápida y eficiente a lo largo de los axones."
+                explanation: "La repetición espaciada distribuye los repasos en el tiempo para contrarrestar la curva del olvido de Ebbinghaus, consolidando la información en la memoria a largo plazo."
             },
             {
                 id: 2,
-                question: "¿Qué estructura cerebral es fundamental para el proceso de consolidación de la memoria?",
+                question: "¿Qué estructura es fundamental para la consolidación de nuevas memorias episódicas?",
                 options: [
                     "Cerebelo",
                     "Corteza Motora",
@@ -88,82 +95,92 @@
                     "Lóbulo Occipital"
                 ],
                 correct: 2,
-                explanation: "El hipocampo es una estructura clave en el sistema límbico que desempeña un papel esencial en la formación de nuevas memorias episódicas y espaciales."
+                explanation: "El hipocampo desempeña un papel crucial en la formación y consolidación de la memoria declarativa (episódica y semántica)."
             },
             {
                 id: 3,
-                question: "En el contexto de la repetición espaciada, ¿qué ocurre con la curva del olvido al repasar?",
+                question: "¿Qué beneficio principal ofrece la evaluación interactiva inmediata (Active Recall)?",
                 options: [
-                    "Se vuelve más pronunciada",
-                    "Se aplana, haciendo que la información dure más tiempo",
-                    "Inicia desde cero sin ningún cambio",
-                    "Desaparece por completo al primer intento"
+                    "Evita el esfuerzo mental durante las sesiones de estudio",
+                    "Fortalece las conexiones neuronales al recuperar activamente la información",
+                    "Garantiza el aprobado sin necesidad de repaso previo",
+                    "Permite estudiar únicamente la noche anterior al examen"
                 ],
                 correct: 1,
-                explanation: "Cada repaso estratégico 'aplana' la curva del olvido, haciendo que la tasa de pérdida de memoria sea significativamente más lenta con el tiempo."
+                explanation: "El recuerdo activo (Active Recall) fuerza al cerebro a recuperar datos guardados, fortaleciendo la retención con mayor eficacia que la relectura pasiva."
             }
         ];
 
         // --- APP PRINCIPAL ---
         function App() {
-            // Estado Global
-            const [user, setUser] = useState(null); // null = No autenticado
+            // Estado de Usuario (Inicia en null = No autenticado)
+            const [user, setUser] = useState(null);
             const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'generator', 'community'
             
-            // Estado de Registro / Login
-            const [authMode, setAuthMode] = useState('login'); // 'login' o 'register'
+            // Estado de Autenticación
+            const [authMode, setAuthMode] = useState('login');
             const [formData, setFormData] = useState({
                 fullName: '',
                 email: '',
                 password: '',
                 university: '',
+                customUniversity: '',
                 degree: ''
             });
 
-            // Estado de Dashboard
-            const [subjects, setSubjects] = useState(['Neurociencia', 'Derecho Mercantil', 'Estadística']);
+            // Estado de Dashboard / Asignaturas
+            const [subjects, setSubjects] = useState([]); // Vacío al inicio
             const [showModal, setShowModal] = useState(false);
             const [newSubject, setNewSubject] = useState('');
             const [notesText, setNotesText] = useState('');
+            const [isExtractingPDF, setIsExtractingPDF] = useState(false);
 
             // Estado del Examen / Test
             const [currentTest, setCurrentTest] = useState(null);
+            const [currentSubjectName, setCurrentSubjectName] = useState('General');
             const [isPublic, setIsPublic] = useState(false);
             const [userAnswers, setUserAnswers] = useState({});
             const [testSubmitted, setTestSubmitted] = useState(false);
 
-            // Estado de Comunidad
+            // Estado del Banco Comunitario
             const [publicExams, setPublicExams] = useState(initialPublicExams);
             const [searchQuery, setSearchQuery] = useState('');
             const [filterUniversity, setFilterUniversity] = useState('');
 
-            // Manejar Cambios de Inputs de Auth
+            // Manejo de Inputs de Auth
             const handleAuthInput = (e) => {
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
-            // Login / Registro Submit
+            // Login / Registro Submit con datos reales
             const handleAuthSubmit = (e) => {
                 e.preventDefault();
+                
+                // Determinar la universidad final (seleccionada o ingresada manualmente)
+                let finalUniversity = formData.university;
+                if (formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') {
+                    finalUniversity = formData.customUniversity.trim() || formData.university;
+                }
+
                 if (authMode === 'register') {
                     setUser({
                         name: formData.fullName || 'Estudiante',
                         email: formData.email,
-                        university: formData.university || 'Universidad General',
+                        university: finalUniversity || 'Universidad No Especificada',
                         degree: formData.degree || 'Grado Universitario'
                     });
                 } else {
                     setUser({
-                        name: 'Ana García',
-                        email: formData.email || 'ana.garcia@estudiante.edu',
-                        university: 'Universidad Complutense de Madrid',
-                        degree: 'Ingeniería Software'
+                        name: formData.email.split('@')[0] || 'Estudiante',
+                        email: formData.email,
+                        university: finalUniversity || 'Universidad Registrada',
+                        degree: 'Grado Universitario'
                     });
                 }
                 setActiveTab('dashboard');
             };
 
-            // Añadir Asignatura
+            // Añadir Asignatura Real
             const handleAddSubject = (e) => {
                 e.preventDefault();
                 if (newSubject.trim()) {
@@ -173,49 +190,158 @@
                 }
             };
 
-            // Iniciar Generador de Test con IA
-            const handleGenerateTest = () => {
-                if (!notesText.trim()) {
-                    alert("Por favor, pega algunos apuntes antes de generar el test.");
+            // Lectura Real de Archivos PDF usando PDF.js
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.type !== 'application/pdf') {
+                    alert("Por favor, selecciona un archivo PDF válido.");
                     return;
                 }
-                setCurrentTest(sampleQuestions);
+
+                setIsExtractingPDF(true);
+                const reader = new FileReader();
+
+                reader.onload = async function() {
+                    try {
+                        const typedarray = new Uint8Array(this.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let fullText = '';
+
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += `--- Página ${i} ---\n` + pageText + '\n\n';
+                        }
+
+                        setNotesText(fullText);
+                    } catch (error) {
+                        console.error("Error al procesar el PDF:", error);
+                        alert("Hubo un error al extraer el texto del PDF. Intenta copiar y pegar el texto manualmente.");
+                    } finally {
+                        setIsExtractingPDF(false);
+                    }
+                };
+
+                reader.readAsArrayBuffer(file);
+            };
+
+            // Generador de Test Inteligente basándose en los apuntes cargados
+            const handleGenerateTest = () => {
+                if (!notesText.trim()) {
+                    alert("Por favor, sube un archivo PDF o pega texto en el área de apuntes antes de generar el test.");
+                    return;
+                }
+
+                // Intenta seleccionar la primera asignatura del usuario o asigna una genérica
+                const currentSub = subjects.length > 0 ? subjects[0] : 'General';
+                setCurrentSubjectName(currentSub);
+
+                // Si se detecta texto en los apuntes, generamos preguntas dinámicas derivadas del texto
+                const textLines = notesText.split('\n').filter(l => l.trim().length > 20);
+                let generatedQuestions = [];
+
+                if (textLines.length >= 3) {
+                    generatedQuestions = [
+                        {
+                            id: 1,
+                            question: `Según los apuntes cargados: ¿Cuál de las siguientes afirmaciones refleja mejor el contenido principal?`,
+                            options: [
+                                textLines[0].substring(0, 80) + '...',
+                                "Información no contemplada en el documento de estudio",
+                                "Conclusión opuesta a los temas tratados en los apuntes",
+                                "Concepto secundario sin relevancia teórica"
+                            ],
+                            correct: 0,
+                            explanation: `Extraído directamente del fragmento de tus apuntes: "${textLines[0].substring(0, 120)}..."`
+                        },
+                        {
+                            id: 2,
+                            question: `Respecto al desarrollo analizado en el texto cargado:`,
+                            options: [
+                                "No se incluye ningún fundamento teórico directo",
+                                textLines[Math.floor(textLines.length / 2)].substring(0, 80) + '...',
+                                "Se desacredita el marco conceptual tradicional",
+                                "Aplica únicamente a casos prácticos aislados"
+                            ],
+                            correct: 1,
+                            explanation: `Basado en la sección intermedia de tus apuntes: "${textLines[Math.floor(textLines.length / 2)].substring(0, 120)}..."`
+                        },
+                        {
+                            id: 3,
+                            question: `Al sintetizar los apuntes introducidos, ¿qué elemento clave se destaca?`,
+                            options: [
+                                "Falta de estructura formal en las definiciones",
+                                "Incompatibilidad con los planes de estudio vigentes",
+                                textLines[textLines.length - 1].substring(0, 80) + '...',
+                                "Ausencia de conceptos evaluables"
+                            ],
+                            correct: 2,
+                            explanation: `Derivado del bloque final de tus apuntes: "${textLines[textLines.length - 1].substring(0, 120)}..."`
+                        }
+                    ];
+                } else {
+                    generatedQuestions = sampleQuestions;
+                }
+
+                setCurrentTest(generatedQuestions);
                 setUserAnswers({});
                 setTestSubmitted(false);
                 setActiveTab('generator');
             };
 
-            // Cargar Test desde la Comunidad
+            // Practicar un examen público del Banco Comunitario
             const handlePracticeExam = (exam) => {
+                setCurrentSubjectName(exam.subject);
                 setCurrentTest(sampleQuestions);
                 setUserAnswers({});
                 setTestSubmitted(false);
                 setActiveTab('generator');
             };
 
-            // Manejar selección de respuestas
+            // Selección de respuesta
             const handleSelectOption = (qId, optionIdx) => {
                 if (testSubmitted) return;
                 setUserAnswers({ ...userAnswers, [qId]: optionIdx });
             };
 
-            // Calcular Resultados
+            // Cálculo de nota
             const calculateScore = () => {
+                if (!currentTest) return 0;
                 let correctCount = 0;
-                sampleQuestions.forEach(q => {
+                currentTest.forEach(q => {
                     if (userAnswers[q.id] === q.correct) correctCount++;
                 });
-                return Math.round((correctCount / sampleQuestions.length) * 10);
+                return Math.round((correctCount / currentTest.length) * 10);
+            };
+
+            // Si el examen se marca como público al finalizar, agregarlo a la lista comunitaria
+            const handleFinishTest = () => {
+                setTestSubmitted(true);
+                if (isPublic && currentTest) {
+                    const newPublicExam = {
+                        id: Date.now(),
+                        title: `Examen de ${currentSubjectName}`,
+                        university: user ? user.university : "Universidad General",
+                        subject: currentSubjectName,
+                        author: user ? user.name : "Estudiante MemorAI",
+                        questions: currentTest.length,
+                        rating: 5.0
+                    };
+                    setPublicExams([newPublicExam, ...publicExams]);
+                }
             };
 
             return (
                 <div className="flex-1 flex flex-col min-h-screen">
-                    {/* NAV BAR */}
+                    {/* BARRA DE NAVEGACIÓN */}
                     <nav className="bg-white border-b border-purple-100 sticky top-0 z-40 shadow-sm">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex justify-between h-16 items-center">
-                                <div className="flex items-[#6d28d9] items-center space-x-2 font-bold text-xl cursor-pointer" onClick={() => user && setActiveTab('dashboard')}>
-                                    <div className="bg-brand-600 text-white p-2 rounded-xl flex items-center justify-center">
+                                <div className="flex items-center space-x-2 font-bold text-xl cursor-pointer" onClick={() => user && setActiveTab('dashboard')}>
+                                    <div className="bg-brand-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20">
                                         <Icon name="brain" className="w-6 h-6 text-white" />
                                     </div>
                                     <span className="text-brand-900 tracking-tight">Memor<span className="text-brand-600">AI</span></span>
@@ -242,7 +368,7 @@
                                         <div className="pl-4 border-l border-slate-200 flex items-center space-x-3">
                                             <div className="hidden md:block text-right">
                                                 <div className="text-xs font-bold text-slate-800">{user.name}</div>
-                                                <div className="text-xs text-slate-500">{user.degree}</div>
+                                                <div className="text-xs text-slate-500 max-w-[150px] truncate" title={`${user.degree} • ${user.university}`}>{user.degree}</div>
                                             </div>
                                             <button 
                                                 onClick={() => setUser(null)}
@@ -257,7 +383,7 @@
                         </div>
                     </nav>
 
-                    {/* VISTAS CONTENIDO */}
+                    {/* VISTAS DE LA APLICACIÓN */}
                     <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
                         
                         {/* 1. AUTENTICACIÓN / LANDING */}
@@ -272,7 +398,7 @@
                                         Memor<span className="text-brand-600">AI</span>: Tu Aula Inteligente
                                     </h1>
                                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                                        Domina cualquier examen universitario. Sube tus apuntes, genera tests interactivos al instante y optimiza tu retención con algoritmos de repaso inteligente.
+                                        Domina cualquier examen universitario. Sube tus apuntes en PDF, genera tests interactivos al instante y optimiza tu retención con algoritmos de repaso inteligente.
                                     </p>
                                 </div>
 
@@ -301,7 +427,7 @@
                                                     value={formData.fullName} 
                                                     onChange={handleAuthInput} 
                                                     placeholder="Ej. María García" 
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                                                 />
                                             </div>
                                         )}
@@ -315,7 +441,7 @@
                                                 value={formData.email} 
                                                 onChange={handleAuthInput} 
                                                 placeholder="tu.email@universidad.edu" 
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                                             />
                                         </div>
 
@@ -328,7 +454,7 @@
                                                 value={formData.password} 
                                                 onChange={handleAuthInput} 
                                                 placeholder="••••••••" 
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                                             />
                                         </div>
 
@@ -343,13 +469,162 @@
                                                         required
                                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white">
                                                         <option value="">Selecciona tu universidad</option>
-                                                        <option value="Universidad Complutense de Madrid">U. Complutense de Madrid</option>
-                                                        <option value="Universidad de Barcelona">U. de Barcelona</option>
-                                                        <option value="Universidad Politécnica de Valencia">U. Politécnica de Valencia</option>
-                                                        <option value="Universidad de Sevilla">U. de Sevilla</option>
-                                                        <option value="Otra Universidad">Otra / Internacional</option>
+
+                                                        <optgroup label="Andalucía">
+                                                            <option value="Universidad de Sevilla">Universidad de Sevilla</option>
+                                                            <option value="Universidad de Granada">Universidad de Granada</option>
+                                                            <option value="Universidad de Málaga">Universidad de Málaga</option>
+                                                            <option value="Universidad de Córdoba">Universidad de Córdoba</option>
+                                                            <option value="Universidad de Cátiz">Universidad de Cádiz</option>
+                                                            <option value="Universidad de Almería">Universidad de Almería</option>
+                                                            <option value="Universidad de Huelva">Universidad de Huelva</option>
+                                                            <option value="Universidad de Jaén">Universidad de Jaén</option>
+                                                            <option value="Universidad Internacional de Andalucía">Universidad Internacional de Andalucía</option>
+                                                            <option value="Universidad Pablo de Olavide">Universidad Pablo de Olavide</option>
+                                                            <option value="Universidad Loyola Andalucía">Universidad Loyola Andalucía</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Aragón">
+                                                            <option value="Universidad de Zaragoza">Universidad de Zaragoza</option>
+                                                            <option value="Universidad San Jorge">Universidad San Jorge</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Canarias">
+                                                            <option value="Universidad de La Laguna">Universidad de La Laguna</option>
+                                                            <option value="Universidad de Las Palmas de Gran Canaria">Universidad de Las Palmas de Gran Canaria</option>
+                                                            <option value="Universidad Fernando Pessoa-Canarias">Universidad Fernando Pessoa-Canarias</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Cantabria">
+                                                            <option value="Universidad de Cantabria">Universidad de Cantabria</option>
+                                                            <option value="Universidad Europea del Atlántico">Universidad Europea del Atlántico</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Castilla y León">
+                                                            <option value="Universidad de Salamanca">Universidad de Salamanca</option>
+                                                            <option value="Universidad de Valladolid">Universidad de Valladolid</option>
+                                                            <option value="Universidad de León">Universidad de León</option>
+                                                            <option value="Universidad de Burgos">Universidad de Burgos</option>
+                                                            <option value="Universidad Pontificia de Salamanca">Universidad Pontificia de Salamanca</option>
+                                                            <option value="IE University">IE University</option>
+                                                            <option value="Universidad Europea Miguel de Cervantes">Universidad Europea Miguel de Cervantes</option>
+                                                            <option value="Universidad Católica de Ávila">Universidad Católica de Ávila</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Castilla-La Mancha">
+                                                            <option value="Universidad de Castilla-La Mancha">Universidad de Castilla-La Mancha</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Cataluña">
+                                                            <option value="Universidad de Barcelona">Universidad de Barcelona</option>
+                                                            <option value="Universidad Autónoma de Barcelona">Universidad Autónoma de Barcelona</option>
+                                                            <option value="Universidad Politécnica de Cataluña">Universidad Politécnica de Cataluña</option>
+                                                            <option value="Universidad Pompeu Fabra">Universidad Pompeu Fabra</option>
+                                                            <option value="Universidad de Rovira i Virgili">Universidad de Rovira i Virgili</option>
+                                                            <option value="Universidad de Lleida">Universidad de Lleida</option>
+                                                            <option value="Universidad de Girona">Universidad de Girona</option>
+                                                            <option value="Universidad Ramon Llull">Universidad Ramon Llull</option>
+                                                            <option value="Universidad de Vic - Universidad Central de Cataluña">Universidad de Vic - UCC</option>
+                                                            <option value="Universidad Internacional de Cataluña">Universidad Internacional de Cataluña</option>
+                                                            <option value="Universidad Abat Oliba CEU">Universidad Abat Oliba CEU</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Comunidad de Madrid">
+                                                            <option value="Universidad Complutense de Madrid">Universidad Complutense de Madrid</option>
+                                                            <option value="Universidad Autónoma de Madrid">Universidad Autónoma de Madrid</option>
+                                                            <option value="Universidad Politécnica de Madrid">Universidad Politécnica de Madrid</option>
+                                                            <option value="Universidad Carlos III de Madrid">Universidad Carlos III de Madrid</option>
+                                                            <option value="Universidad Alcalá">Universidad de Alcalá</option>
+                                                            <option value="Universidad Rey Juan Carlos">Universidad Rey Juan Carlos</option>
+                                                            <option value="Universidad CEU San Pablo">Universidad CEU San Pablo</option>
+                                                            <option value="Universidad Pontificia Comillas">Universidad Pontificia Comillas</option>
+                                                            <option value="Universidad Francisco de Vitoria">Universidad Francisco de Vitoria</option>
+                                                            <option value="Universidad Europea de Madrid">Universidad Europea de Madrid</option>
+                                                            <option value="Universidad Alfonso X el Sabio">Universidad Alfonso X el Sabio</option>
+                                                            <option value="Universidad Camilo José Cela">Universidad Camilo José Cela</option>
+                                                            <option value="Universidad Nebrija">Universidad Nebrija</option>
+                                                            <option value="Universidad Villanueva">Universidad Villanueva</option>
+                                                            <option value="Universidad Cardenal Cisneros">Universidad Cardenal Cisneros</option>
+                                                            <option value="CUNEF Universidad">CUNEF Universidad</option>
+                                                            <option value="Universidad ESIC">Universidad ESIC</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Comunidad Valenciana">
+                                                            <option value="Universidad de Valencia">Universidad de Valencia</option>
+                                                            <option value="Universidad Politécnica de Valencia">Universidad Politécnica de Valencia</option>
+                                                            <option value="Universidad de Alicante">Universidad de Alicante</option>
+                                                            <option value="Universidad Jaume I">Universidad Jaume I</option>
+                                                            <option value="Universidad Miguel Hernández">Universidad Miguel Hernández</option>
+                                                            <option value="Universidad Cardenal Herrera-CEU">Universidad Cardenal Herrera-CEU</option>
+                                                            <option value="Universidad Católica de Valencia San Vicente Mártir">Universidad Católica de Valencia</option>
+                                                            <option value="Universidad Internacional de Valencia (VIU)">Universidad Internacional de Valencia (VIU)</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Extremadura">
+                                                            <option value="Universidad de Extremadura">Universidad de Extremadura</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Galicia">
+                                                            <option value="Universidad de Santiago de Compostela">Universidad de Santiago de Compostela</option>
+                                                            <option value="Universidad de La Coruña">Universidad de La Coruña</option>
+                                                            <option value="Universidad de Vigo">Universidad de Vigo</option>
+                                                            <option value="Universidad Intercontinental de la Empresa">Universidad Intercontinental de la Empresa</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Islas Baleares">
+                                                            <option value="Universidad de las Islas Baleares">Universidad de las Islas Baleares</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="La Rioja">
+                                                            <option value="Universidad de La Rioja">Universidad de La Rioja</option>
+                                                            <option value="Universidad Internacional de La Rioja (UNIR)">Universidad Internacional de La Rioja (UNIR)</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Navarra">
+                                                            <option value="Universidad Pública de Navarra">Universidad Pública de Navarra</option>
+                                                            <option value="Universidad de Navarra">Universidad de Navarra</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="País Vasco">
+                                                            <option value="Universidad del País Vasco (UPV/EHU)">Universidad del País Vasco (UPV/EHU)</option>
+                                                            <option value="Universidad de Deusto">Universidad de Deusto</option>
+                                                            <option value="Mondragon Unibertsitatea">Mondragon Unibertsitatea</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Región de Murcia">
+                                                            <option value="Universidad de Murcia">Universidad de Murcia</option>
+                                                            <option value="Universidad Politécnica de Cartagena">Universidad Politécnica de Cartagena</option>
+                                                            <option value="Universidad Católica San Antonio de Murcia (UCAM)">Universidad Católica (UCAM)</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Educación a Distancia">
+                                                            <option value="UNED - Universidad Nacional de Educación a Distancia">UNED</option>
+                                                            <option value="UOC - Universitat Oberta de Catalunya">UOC</option>
+                                                            <option value="UDIMA - Universidad a Distancia de Madrid">UDIMA</option>
+                                                        </optgroup>
+
+                                                        <optgroup label="Otras opciones">
+                                                            <option value="Otra universidad (España)">Otra universidad (España)</option>
+                                                            <option value="Universidad Extranjera / Internacional">Universidad Extranjera / Internacional</option>
+                                                        </optgroup>
                                                     </select>
                                                 </div>
+
+                                                {/* CAMPO ADICIONAL SI SE SELECCIONA OTRA UNIVERSIDAD / INTERNACIONAL */}
+                                                {(formData.university === 'Otra universidad (España)' || formData.university === 'Universidad Extranjera / Internacional') && (
+                                                    <div>
+                                                        <label className="block text-xs font-semibold text-brand-700 uppercase mb-1">Escribe el nombre de tu Universidad</label>
+                                                        <input 
+                                                            type="text" 
+                                                            name="customUniversity"
+                                                            required
+                                                            value={formData.customUniversity} 
+                                                            onChange={handleAuthInput} 
+                                                            placeholder="Ej. Universidad de Buenos Aires, Harvard, etc." 
+                                                            className="w-full px-4 py-2.5 rounded-xl border border-brand-300 bg-brand-50/40 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                                                        />
+                                                    </div>
+                                                )}
 
                                                 <div>
                                                     <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Carrera / Grado</label>
@@ -359,8 +634,8 @@
                                                         required
                                                         value={formData.degree} 
                                                         onChange={handleAuthInput} 
-                                                        placeholder="Ej. Medicina, Medicina, Derecho, etc." 
-                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm"
+                                                        placeholder="Ej. Medicina, Derecho, Ing. Informática, etc." 
+                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                                                     />
                                                 </div>
                                             </>
@@ -400,7 +675,9 @@
                                             <Icon name="trending-up" className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <div className="text-2xl font-bold text-slate-800">84%</div>
+                                            <div className="text-2xl font-bold text-slate-800">
+                                                {subjects.length > 0 ? "85%" : "0%"}
+                                            </div>
                                             <div className="text-xs text-slate-500 font-medium">Nivel de Dominio Global</div>
                                         </div>
                                     </div>
@@ -410,7 +687,9 @@
                                             <Icon name="calendar" className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <div className="text-2xl font-bold text-slate-800">En 4 días</div>
+                                            <div className="text-2xl font-bold text-slate-800">
+                                                {subjects.length > 0 ? "En 4 días" : "Sin fecha"}
+                                            </div>
                                             <div className="text-xs text-slate-500 font-medium">Próximo Examen Parcial</div>
                                         </div>
                                     </div>
@@ -420,7 +699,7 @@
                                             <Icon name="flame" className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <div className="text-2xl font-bold text-slate-800">12 Días</div>
+                                            <div className="text-2xl font-bold text-slate-800">1 Día</div>
                                             <div className="text-xs text-slate-500 font-medium">Racha de Estudio</div>
                                         </div>
                                     </div>
@@ -430,26 +709,41 @@
                                             <Icon name="clock" className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <div className="text-2xl font-bold text-slate-800">18 Preg.</div>
+                                            <div className="text-2xl font-bold text-slate-800">
+                                                {currentTest ? "3 Preg." : "0 Preg."}
+                                            </div>
                                             <div className="text-xs text-slate-500 font-medium">Repasos Pendientes Hoy</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Asignaturas */}
+                                {/* Mis Asignaturas */}
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-800 mb-3">Mis Asignaturas</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {subjects.map((sub, idx) => (
-                                            <span key={idx} className="bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm shadow-sm flex items-center space-x-2">
-                                                <Icon name="book-open" className="w-4 h-4 text-brand-500" />
-                                                <span>{sub}</span>
-                                            </span>
-                                        ))}
-                                    </div>
+                                    {subjects.length === 0 ? (
+                                        <div className="bg-white p-6 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
+                                            <Icon name="book-open" className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                                            <p className="text-sm font-medium">No has añadido asignaturas todavía.</p>
+                                            <button 
+                                                onClick={() => setShowModal(true)} 
+                                                className="mt-3 text-xs text-brand-600 font-bold hover:underline inline-flex items-center space-x-1">
+                                                <span>Añade tu primera materia</span>
+                                                <Icon name="arrow-right" className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2">
+                                            {subjects.map((sub, idx) => (
+                                                <span key={idx} className="bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm shadow-sm flex items-center space-x-2">
+                                                    <Icon name="book-open" className="w-4 h-4 text-brand-500" />
+                                                    <span>{sub}</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Área Carga de Apuntes */}
+                                {/* Carga Real de Apuntes */}
                                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
                                     <div className="flex items-center space-x-3 mb-4">
                                         <div className="p-2 bg-brand-50 text-brand-600 rounded-lg">
@@ -461,24 +755,32 @@
                                     <div className="space-y-4">
                                         <div className="border-2 border-dashed border-purple-200 rounded-2xl p-6 text-center hover:border-brand-400 transition bg-purple-50/30">
                                             <Icon name="upload-cloud" className="w-10 h-10 text-brand-500 mx-auto mb-2" />
-                                            <p className="text-sm font-semibold text-slate-700">Arrastra un archivo PDF con tus temas</p>
-                                            <p className="text-xs text-slate-400 mb-3">O escribe/pega tus textos directamente abajo</p>
-                                            <input type="file" className="hidden" id="file-upload" />
+                                            <p className="text-sm font-semibold text-slate-700">Subir archivo PDF con tus temas</p>
+                                            <p className="text-xs text-slate-400 mb-3">PDF.js extraerá el texto directamente en tu navegador</p>
+                                            
+                                            <input 
+                                                type="file" 
+                                                accept="application/pdf"
+                                                onChange={handleFileUpload} 
+                                                className="hidden" 
+                                                id="file-upload" 
+                                            />
                                             <label htmlFor="file-upload" className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm inline-block">
-                                                Explorar archivos
+                                                {isExtractingPDF ? "Extrayendo texto del PDF..." : "Explorar PDF"}
                                             </label>
                                         </div>
 
                                         <textarea 
-                                            rows="4" 
+                                            rows="5" 
                                             value={notesText}
                                             onChange={(e) => setNotesText(e.target.value)}
-                                            placeholder="Pega aquí el contenido de tus apuntes (ej. Resumen del Tema 1 de Neurociencia)..." 
-                                            className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm outline-none">
+                                            placeholder="Pega aquí el texto de tus apuntes o revisa el contenido extraído de tu PDF..." 
+                                            className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none">
                                         </textarea>
 
                                         <button 
                                             onClick={handleGenerateTest}
+                                            disabled={isExtractingPDF}
                                             className="w-full sm:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center space-x-2 text-sm">
                                             <Icon name="sparkles" className="w-4 h-4" />
                                             <span>Generar Test con IA</span>
@@ -494,11 +796,11 @@
                                 {!currentTest ? (
                                     <div className="bg-white p-8 rounded-2xl border border-slate-100 text-center shadow-sm">
                                         <Icon name="help-circle" className="w-12 h-12 text-brand-400 mx-auto mb-3" />
-                                        <h3 className="text-xl font-bold text-slate-800 mb-2">No hay ningún test activo</h3>
-                                        <p className="text-slate-500 text-sm mb-6">Genera uno desde el Panel de Control con tus apuntes o explora el Banco Comunitario.</p>
+                                        <h3 className="text-xl font-bold text-slate-800 mb-2">No hay ningún test generado en esta sesión</h3>
+                                        <p className="text-slate-500 text-sm mb-6">Sube un PDF o pega tus apuntes en el Panel de Control para crear uno personalizado.</p>
                                         <button 
                                             onClick={() => setActiveTab('dashboard')}
-                                            className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold shadow">
+                                            className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition">
                                             Ir al Panel de Control
                                         </button>
                                     </div>
@@ -507,11 +809,11 @@
                                         {/* Header del Examen */}
                                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                             <div>
-                                                <h2 className="text-xl font-bold text-slate-800">Simulador de Examen: Neurociencia</h2>
-                                                <p className="text-xs text-slate-500">3 Preguntas • Basado en tus apuntes</p>
+                                                <h2 className="text-xl font-bold text-slate-800">Simulador de Examen: {currentSubjectName}</h2>
+                                                <p className="text-xs text-slate-500">{currentTest.length} Preguntas • Generado inteligentemente</p>
                                             </div>
 
-                                            {/* Toggle Público/Privado */}
+                                            {/* Selector Examen Público/Privado */}
                                             <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-200 self-start">
                                                 <span className={`text-xs font-semibold ${!isPublic ? 'text-brand-600' : 'text-slate-400'}`}>Privado</span>
                                                 <button 
@@ -527,12 +829,10 @@
                                         <div className="space-y-6">
                                             {currentTest.map((q, idx) => (
                                                 <div key={q.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <h3 className="font-bold text-slate-800 text-base">
-                                                            <span className="text-brand-600 mr-2">{idx + 1}.</span> 
-                                                            {q.question}
-                                                        </h3>
-                                                    </div>
+                                                    <h3 className="font-bold text-slate-800 text-base">
+                                                        <span className="text-brand-600 mr-2">{idx + 1}.</span> 
+                                                        {q.question}
+                                                    </h3>
 
                                                     <div className="space-y-2">
                                                         {q.options.map((opt, oIdx) => {
@@ -579,9 +879,9 @@
                                         {/* Botón Finalizar / Resultados */}
                                         {!testSubmitted ? (
                                             <button 
-                                                onClick={() => setTestSubmitted(true)}
-                                                disabled={Object.keys(userAnswers).length < sampleQuestions.length}
-                                                className={`w-full py-3.5 rounded-xl text-white font-semibold shadow-lg text-sm transition ${Object.keys(userAnswers).length < sampleQuestions.length ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20'}`}>
+                                                onClick={handleFinishTest}
+                                                disabled={Object.keys(userAnswers).length < currentTest.length}
+                                                className={`w-full py-3.5 rounded-xl text-white font-semibold shadow-lg text-sm transition ${Object.keys(userAnswers).length < currentTest.length ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20'}`}>
                                                 Finalizar y Ver Resultados
                                             </button>
                                         ) : (
@@ -591,13 +891,19 @@
                                                     Nota: {calculateScore()} / 10
                                                 </div>
                                                 
-                                                {/* Algoritmo de Repetición Espaciada */}
+                                                {/* Algoritmo Repetición Espaciada */}
                                                 <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center justify-center space-x-3">
                                                     <Icon name="repeat" className="w-5 h-5 text-brand-400" />
                                                     <span>
                                                         Próximo repaso recomendado: <strong className="text-white">En 3 días (Repetición Espaciada)</strong>
                                                     </span>
                                                 </div>
+
+                                                {isPublic && (
+                                                    <p className="text-xs text-emerald-400 font-medium">
+                                                        ✓ Este examen se ha publicado en el Banco Comunitario.
+                                                    </p>
+                                                )}
 
                                                 <button 
                                                     onClick={() => setActiveTab('dashboard')}
@@ -616,7 +922,7 @@
                             <div className="space-y-6">
                                 <div>
                                     <h2 className="text-2xl font-extrabold text-slate-900">Banco Comunitario de Exámenes</h2>
-                                    <p className="text-slate-500 text-sm">Explora y practica con tests creados por otros estudiantes de distintas universidades.</p>
+                                    <p className="text-slate-500 text-sm">Explora y practica con tests compartidos por otros estudiantes universitarios.</p>
                                 </div>
 
                                 {/* Filtros y Búsqueda */}
@@ -625,7 +931,7 @@
                                         <Icon name="search" className="w-4 h-4 text-slate-400 mr-2" />
                                         <input 
                                             type="text" 
-                                            placeholder="Buscar por asignatura o tema..." 
+                                            placeholder="Buscar por asignatura o título..." 
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="bg-transparent text-sm w-full outline-none"
@@ -646,7 +952,7 @@
                                     </div>
                                 </div>
 
-                                {/* Lista de Exámenes Públicos */}
+                                {/* Lista de Exámenes */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {publicExams
                                         .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.subject.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -706,7 +1012,7 @@
                                             required
                                             value={newSubject}
                                             onChange={(e) => setNewSubject(e.target.value)}
-                                            placeholder="Ej. Farmacología General" 
+                                            placeholder="Ej. Farmacología, Estadística, etc." 
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 text-sm outline-none"
                                         />
                                     </div>
@@ -720,7 +1026,7 @@
                                         <button 
                                             type="submit" 
                                             className="px-4 py-2 text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md transition">
-                                            Añadir Asignatura
+                                            Guardar
                                         </button>
                                     </div>
                                 </form>
